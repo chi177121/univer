@@ -1,0 +1,960 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0d16">
+<title>Bản Đồ Hệ Mặt Trời</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..600;1,6..72,200..400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif;background:#0a0d16}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<style>
+/* Layout: sky first, then a gallery of drawn fact cards for whichever body is selected.
+   Single dark theme by choice — this is a stargazing page. */
+:root{
+  --void:#0a0d16;
+  --panel:rgba(14,18,28,.92);
+  --line:rgba(170,190,230,.19);
+  --line-2:rgba(170,190,230,.38);
+  --text:#ffffff;
+  --mute:#e4e8f2;
+  --dim:#c3cad9;
+  --accent:#dce6ff;
+  --good:#8fd6b0;
+  --bad:#e8909d;
+  --f-d:'Newsreader',Georgia,serif;
+  --f-s:'IBM Plex Sans',system-ui,sans-serif;
+  --f-m:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--void);font-size:16px}
+@media(min-width:1280px){html{font-size:17px}}
+@media(min-width:1700px){html{font-size:18px}}
+body{background:var(--void);color:var(--text);font:1rem/1.62 var(--f-s);
+  padding-inline:16px;padding-block:0 56px;-webkit-font-smoothing:antialiased}
+@media(min-width:900px){body{padding-inline:28px}}
+@media(min-width:1400px){body{padding-inline:40px}}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+:focus-visible{outline:1px solid var(--accent);outline-offset:3px}
+.m{font-family:var(--f-m);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.wrap{max-width:1240px;margin-inline:auto}
+@media(min-width:1700px){.wrap{max-width:1360px}}
+
+.bar{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;
+  padding-block:16px 14px;border-bottom:1px solid var(--line);position:sticky;
+  top:env(safe-area-inset-top,0px);background:var(--void);z-index:5}
+.mark{display:flex;align-items:baseline;gap:12px;min-width:0}
+.mark h1{margin:0;font-family:var(--f-d);font-weight:300;font-size:1.32rem;white-space:nowrap}
+nav{display:flex;gap:2px}
+nav button{padding:7px 11px;font-family:var(--f-m);font-size:.7rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--dim);border-bottom:1px solid transparent;min-height:36px}
+nav button:hover{color:var(--text)}
+nav button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent)}
+
+.stage{position:relative;margin-top:18px}
+#sky{display:block;width:100%;max-width:100%;aspect-ratio:1/1;border:1px solid var(--line);
+  border-radius:3px;background:radial-gradient(120% 90% at 50% 45%,#141a2c 0%,#0b0f1a 55%,#070a12 100%);touch-action:manipulation}
+@media(min-width:800px){#sky{aspect-ratio:16/10}}
+.bare #sky{aspect-ratio:16/11}
+@media(min-width:800px){.bare #sky{aspect-ratio:21/9}}
+.tools{display:flex;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap;padding-block:10px}
+.tools p{margin:0;color:var(--mute);font-size:.8rem;max-width:60ch}
+.tset{display:flex;gap:4px;flex:none}
+.tset button{padding:6px 12px;border:1px solid var(--line);border-radius:2px;font-family:var(--f-m);
+  font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);min-height:34px}
+.tset button:hover{border-color:var(--line-2);color:var(--text)}
+
+.readout{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:18px;margin-top:14px;min-width:0}
+@media(min-width:800px){.readout{position:absolute;left:16px;bottom:16px;width:min(330px,38%);margin:0;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}}
+.bare .readout,.bare .scale,.bare .gal{display:none}
+.r-nav{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.r-nav .m{color:var(--c)}
+.r-arrows{display:flex;gap:2px;flex:none}
+.r-arrows button{width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--line);
+  border-radius:2px;color:var(--mute);font-size:.8rem}
+.r-arrows button:hover{border-color:var(--line-2);color:var(--text)}
+.r-name{margin:8px 0 6px;font-family:var(--f-d);font-weight:300;font-size:1.95rem;line-height:1.05;overflow-wrap:anywhere}
+.r-tag{margin:0;color:var(--mute);font-size:.87rem;line-height:1.55}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px 14px;margin-top:16px;padding-top:15px;border-top:1px solid var(--line)}
+.grid dt{font-family:var(--f-m);font-size:.63rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.grid dd{margin:3px 0 0;font-family:var(--f-m);font-size:.79rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+
+.scale{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+.scale p{margin:5px 0 0;color:var(--mute);font-size:.8rem;max-width:60ch}
+.ruler{position:relative;height:30px;margin:16px 0 6px}
+.ruler::before{content:"";position:absolute;left:0;right:0;top:15px;height:1px;background:var(--line-2)}
+.ruler button{position:absolute;top:0;width:22px;height:30px;transform:translateX(-11px);display:grid;place-items:center}
+.ruler i{width:7px;height:7px;border-radius:50%;background:var(--c);display:block;transition:transform .2s}
+.ruler button:hover i,.ruler button[aria-pressed="true"] i{transform:scale(1.75)}
+.ruler-ends{display:flex;justify-content:space-between}
+
+/* gallery */
+.gal{margin-top:34px;padding-top:20px;border-top:1px solid var(--line)}
+.gal-head{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.gal-head i{width:8px;height:8px;border-radius:50%;background:var(--c);flex:none}
+.gal-head h3{margin:0;font-family:var(--f-d);font-weight:400;font-size:1.15rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(224px,1fr));gap:14px}
+@media(min-width:1280px){.cards{grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:18px}}
+.fc{border:1px solid var(--line);border-radius:3px;overflow:hidden;background:#11151f;min-width:0}
+.fc:hover{border-color:var(--line-2)}
+.ill{aspect-ratio:8/5;background:radial-gradient(90% 90% at 50% 45%,rgba(255,255,255,.07),rgba(0,0,0,0)),#0e121c;position:relative}
+.ill svg{display:block;width:100%;height:100%}
+.fc .tx{padding:14px 15px 16px}
+.fc h4{margin:0 0 7px;font-size:.95rem;font-weight:600;line-height:1.38;text-wrap:balance}
+.fc p{margin:0;color:var(--mute);font-size:.85rem;line-height:1.65}
+.fc p em{color:var(--text);font-style:normal;font-weight:500}
+
+/* games */
+.panelw{max-width:760px;margin:26px auto 0}
+.box{border:1px solid var(--line);border-radius:3px;padding:clamp(20px,4vw,34px)}
+.box h2{margin:10px 0 10px;font-family:var(--f-d);font-weight:300;font-size:clamp(1.5rem,4vw,2.1rem);line-height:1.12;text-wrap:balance}
+.box .lead{margin:0 0 26px;color:var(--mute);font-size:.93rem;max-width:none}
+.go{border:1px solid var(--line-2);border-radius:2px;padding:11px 22px;font-family:var(--f-m);
+  font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;min-height:44px}
+.go:hover{background:var(--text);color:var(--void);border-color:var(--text)}
+.row{display:flex;justify-content:space-between;gap:12px 20px;flex-wrap:wrap;align-items:baseline}
+.ticks{display:flex;gap:4px;margin:14px 0 26px}
+.ticks i{flex:1;height:1px;background:var(--line)}
+.ticks i.done{background:var(--accent)}
+.ticks i.now{background:var(--mute)}
+.ask{font-family:var(--f-d);font-weight:300;font-size:clamp(1.25rem,3.4vw,1.72rem);line-height:1.28;margin:0 0 26px;text-wrap:balance}
+.duo{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:560px){.duo{grid-template-columns:1fr 1fr}}
+.duo button{display:flex;align-items:center;gap:13px;border:1px solid var(--line);border-radius:3px;
+  padding:18px;min-height:70px;text-align:left;font-size:1.02rem;font-weight:500;min-width:0}
+.duo button i{width:24px;height:24px;border-radius:50%;background:var(--c);flex:none}
+.duo button span{overflow-wrap:anywhere}
+.duo button:hover:not(:disabled){border-color:var(--c)}
+.duo button:disabled{cursor:default}
+.duo button.hit{border-color:var(--good);color:var(--good)}
+.duo button.hit i{box-shadow:0 0 0 2px var(--good)}
+.duo button.miss{border-color:var(--bad);color:var(--bad)}
+.duo button.dim{opacity:.35}
+.viz{margin:24px 0 2px}
+.vbar{display:flex;align-items:center;gap:12px;margin-bottom:11px}
+.vbar .n{flex:none;width:108px;font-size:.81rem;overflow-wrap:anywhere}
+.vbar .track{flex:1;height:9px;background:rgba(158,178,218,.1);border-radius:2px;overflow:hidden;min-width:0}
+.vbar .track i{display:block;height:100%;background:var(--c);border-radius:2px}
+.vbar .v{flex:none;font-family:var(--f-m);font-size:.79rem;font-variant-numeric:tabular-nums}
+.vsize{display:flex;align-items:flex-end;justify-content:center;gap:clamp(20px,7vw,46px);padding:6px 0 2px;flex-wrap:wrap}
+.vsize figure{margin:0;text-align:center;min-width:0}
+.vsize .ball{border-radius:50%;background:var(--c);margin:0 auto 10px;max-width:100%}
+.vsize figcaption{font-size:.79rem}
+.vsize .v{display:block;font-family:var(--f-m);font-size:.75rem;color:var(--mute);margin-top:3px}
+.verdict{border-top:1px solid var(--line);padding-top:20px;margin-top:8px}
+.vrow{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:14px}
+.vrow div b{display:block;font-family:var(--f-m);font-size:1.3rem;font-variant-numeric:tabular-nums;margin-top:5px}
+.vrow div b.ok{color:var(--good)}
+.vrow div b.no{color:var(--bad)}
+.verdict p{margin:0;color:var(--mute);font-size:.9rem;line-height:1.64;max-width:none}
+.after{display:flex;justify-content:flex-end;margin-top:22px}
+/* bạn ở đó */
+.tune{display:grid;grid-template-columns:1fr;gap:20px;margin:6px 0 30px}
+@media(min-width:560px){.tune{grid-template-columns:1fr 1fr;gap:30px}}
+.tune .lv{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:2px}
+.tune .lv b{font-family:var(--f-m);font-size:1.3rem;font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:none;display:block;margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:1px;background:var(--line-2)}
+input[type=range]::-moz-range-track{height:1px;background:var(--line-2)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--text);margin-top:-7.5px}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border:0;border-radius:50%;background:var(--text)}
+.hl{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:30px}
+@media(min-width:620px){.hl{grid-template-columns:repeat(3,1fr)}}
+.hl div{border-left:2px solid var(--c);padding-left:14px;min-width:0}
+.hl b{display:block;font-family:var(--f-d);font-weight:300;font-size:1.45rem;line-height:1.15;margin-top:5px}
+.hl em{font-style:normal;color:var(--mute);font-size:.8rem;display:block;margin-top:4px}
+.you{display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:12px}
+@media(min-width:760px){.you{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}}
+@media(min-width:1280px){.you{gap:18px}}
+.yc{border:1px solid var(--line);border-radius:3px;padding:14px;min-width:0}
+.yc .hd{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.yc .hd i{width:8px;height:8px;border-radius:50%;background:var(--c);flex:none}
+.yc .hd span{font-size:.87rem;font-weight:600;overflow-wrap:anywhere}
+.yc svg{display:block;width:100%;height:auto;margin-bottom:6px}
+.yc dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:5px 10px;align-items:baseline}
+.yc dt{font-family:var(--f-m);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.yc dd{margin:0;font-family:var(--f-m);font-size:.81rem;text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.big{font-family:var(--f-d);font-weight:200;font-size:clamp(3rem,13vw,5.4rem);line-height:1;font-variant-numeric:tabular-nums;margin:12px 0}
+.big small{font-family:var(--f-m);font-size:.16em;letter-spacing:.14em;color:var(--mute);margin-left:8px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="bar">
+    <div class="mark">
+      <h1>Hệ Mặt Trời</h1>
+      <span class="m" id="counter"></span>
+    </div>
+    <nav role="tablist" aria-label="Chế độ">
+      <button role="tab" data-view="map" aria-selected="true">Bản đồ</button>
+      <button role="tab" data-view="ab" aria-selected="false">Cái nào hơn</button>
+      <button role="tab" data-view="tf" aria-selected="false">Thật hay xạo</button>
+      <button role="tab" data-view="you" aria-selected="false">Bạn ở đó</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="view-map">
+      <div class="stage" id="stage">
+        <canvas id="sky" role="img" aria-label="Bản đồ hệ Mặt Trời nhìn từ trên xuống, tám hành tinh quay quanh Mặt Trời"></canvas>
+        <aside class="readout" id="readout" aria-live="polite"></aside>
+      </div>
+      <div class="tools">
+        <p>Chạm vào một thiên thể để đổi hồ sơ. Bản đồ nén khoảng cách cho tám quỹ đạo cùng lọt khung.</p>
+        <div class="tset">
+          <button type="button" id="motion">Dừng</button>
+          <button type="button" id="bare">Ẩn bảng</button>
+        </div>
+      </div>
+      <div class="scale">
+        <span class="m">Khoảng cách thật, đúng tỉ lệ</span>
+        <p>Đây mới là hình dạng thật của hệ: bốn hành tinh đá dồn hết vào 5% đầu tiên, phần còn lại gần như trống không.</p>
+        <div class="ruler" id="ruler"></div>
+        <div class="ruler-ends"><span class="m">Mặt Trời</span><span class="m">4,5 tỉ km</span></div>
+      </div>
+      <div class="gal">
+        <div class="gal-head" id="galHead"></div>
+        <div class="cards" id="cards"></div>
+      </div>
+    </section>
+
+    <section id="view-ab" hidden><div class="panelw" id="abBox"></div></section>
+    <section id="view-tf" hidden><div class="panelw" id="tfBox"></div></section>
+    <section id="view-you" hidden><div class="panelw" id="youBox" style="max-width:940px"></div></section>
+  </main>
+</div>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function rgbOf(h){var n=parseInt(h.slice(1),16);return [n>>16&255,n>>8&255,n&255]}
+function lite(h,t){return 'rgb('+rgbOf(h).map(function(v){return Math.round(v+(255-v)*t)}).join(',')+')'}
+function dk(h,t){return 'rgb('+rgbOf(h).map(function(v){return Math.round(v*(1-t))}).join(',')+')'}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function num(v,d){return v.toLocaleString('vi-VN',{minimumFractionDigits:d||0,maximumFractionDigits:d||0})}
+function auto(v){var a=Math.abs(v);return num(v,a<10?(a<1?2:1):0)}
+
+/* ---------- illustration kit ---------- */
+function st(a){return a.map(function(p){return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+(p[2]||1.1)+'" fill="#ffffff" opacity="'+(p[3]||.3)+'"/>'}).join('')}
+function wrap(inner){return '<svg viewBox="0 0 240 150" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+inner+'</svg>'}
+var W1='#ffffff',DIMS='rgba(178,196,232,.44)',SUNC='#ffc257',BLU='#4a94e0',ICE='#bfe6ff';
+
+var ILL={
+/* sun */
+white:wrap(st([[24,26],[36,124,.9],[212,28,.9]])+
+ '<circle cx="60" cy="75" r="46" fill="#ffffff" opacity=".10"/><circle cx="60" cy="75" r="31" fill="#ffffff"/>'+
+ '<g stroke="#ffffff" stroke-width="3"><path d="M96 60 L142 51"/><path d="M96 75 L142 75"/><path d="M96 90 L142 99"/></g>'+
+ '<path d="M152 16 Q176 75 152 134" stroke="rgba(120,180,255,.5)" stroke-width="4"/>'+
+ '<g stroke="var(--c)" stroke-width="3"><path d="M164 48 L212 38"/><path d="M164 75 L212 75"/><path d="M164 102 L212 112"/></g>'),
+bell:wrap(st([[26,30],[210,120,.9],[32,116,.8]])+
+ '<circle cx="120" cy="75" r="68" stroke="var(--c)" stroke-width="2" opacity=".14"/>'+
+ '<circle cx="120" cy="75" r="53" stroke="var(--c)" stroke-width="2" opacity=".26"/>'+
+ '<circle cx="120" cy="75" r="39" stroke="var(--c)" stroke-width="2" opacity=".45"/>'+
+ '<circle cx="120" cy="75" r="25" fill="var(--c)"/>'+
+ '<g stroke="'+W1+'" stroke-width="2.5" opacity=".75"><path d="M20 60 q10 15 0 30"/><path d="M32 52 q16 23 0 46"/><path d="M220 60 q-10 15 0 30"/><path d="M208 52 q-16 23 0 46"/></g>'),
+slow:wrap('<circle cx="84" cy="75" r="56" stroke="var(--c)" stroke-width="2" opacity=".45"/>'+
+ '<circle cx="84" cy="75" r="56" fill="var(--c)" opacity=".07"/>'+
+ '<path d="M84 75 l-16 -14 l20 -9 l-23 -12 l26 -8 l-14 -16 l24 -4" stroke="'+W1+'" stroke-width="2.5"/>'+
+ '<path d="M84 75 l18 12 l-8 14 l20 6" stroke="'+W1+'" stroke-width="2.5" opacity=".55"/>'+
+ '<path d="M140 75 L206 75" stroke="var(--c)" stroke-width="3"/><path d="M197 67 l9 8 l-9 8" stroke="var(--c)" stroke-width="3"/>'+
+ st([[204,34],[218,110,.9],[192,124,.8]])),
+spin:wrap(st([[20,20],[222,26,.9],[28,128,.8],[214,132,.9],[120,14,.8]])+
+ '<path d="M120 75 C144 52 184 60 190 92 C196 128 148 146 110 132 C64 114 56 56 98 32 C144 6 208 34 216 82" stroke="'+DIMS+'" stroke-width="2"/>'+
+ '<path d="M56 108 C72 96 92 88 118 86" stroke="var(--c)" stroke-width="2.5" stroke-dasharray="3 6"/>'+
+ '<circle cx="120" cy="86" r="7" fill="var(--c)"/><circle cx="120" cy="86" r="15" fill="var(--c)" opacity=".2"/>'),
+
+/* mercury */
+near:wrap('<circle cx="120" cy="66" r="13" fill="'+SUNC+'"/><circle cx="120" cy="66" r="22" fill="'+SUNC+'" opacity=".16"/>'+
+ '<circle cx="120" cy="66" r="36" stroke="'+DIMS+'" stroke-width="1.5"/><circle cx="120" cy="66" r="66" stroke="'+DIMS+'" stroke-width="1.5"/>'+
+ '<circle cx="84" cy="66" r="8" fill="var(--c)"/><circle cx="186" cy="66" r="10" fill="'+BLU+'"/>'+
+ '<g stroke="'+W1+'" stroke-width="1.6"><path d="M84 96 L186 96" stroke-dasharray="4 5"/><path d="M84 90 L84 102"/><path d="M186 90 L186 102"/></g>'+
+ '<path d="M120 120 L120 132" stroke="'+DIMS+'" stroke-width="1.6"/>'),
+back:wrap('<path d="M14 124 L226 124" stroke="'+DIMS+'" stroke-width="2"/>'+
+ '<path d="M26 118 Q120 18 214 118" stroke="'+DIMS+'" stroke-width="2" stroke-dasharray="4 6"/>'+
+ '<circle cx="60" cy="72" r="10" fill="'+SUNC+'" opacity=".32"/>'+
+ '<circle cx="166" cy="60" r="10" fill="'+SUNC+'" opacity=".32"/>'+
+ '<circle cx="122" cy="43" r="14" fill="'+SUNC+'"/><circle cx="122" cy="43" r="23" fill="'+SUNC+'" opacity=".16"/>'+
+ '<path d="M156 92 L100 92" stroke="'+W1+'" stroke-width="2.5"/><path d="M109 84 l-9 8 l9 8" stroke="'+W1+'" stroke-width="2.5"/>'),
+ice:wrap('<g stroke="'+SUNC+'" stroke-width="2.5" opacity=".8"><path d="M34 14 L48 52"/><path d="M74 10 L84 50"/><path d="M166 10 L156 50"/><path d="M206 14 L192 52"/></g>'+
+ '<path d="M12 62 L74 62 C94 62 96 114 120 114 C144 114 146 62 166 62 L228 62" stroke="var(--c)" stroke-width="3"/>'+
+ '<path d="M100 108 q20 -12 40 0" stroke="'+ICE+'" stroke-width="5"/>'+
+ '<circle cx="110" cy="99" r="2.6" fill="'+ICE+'"/><circle cx="130" cy="97" r="2" fill="'+ICE+'"/>'+
+ st([[24,128,1.2,.35],[214,128,1.2,.35]])),
+shrink:wrap('<circle cx="120" cy="75" r="57" stroke="'+DIMS+'" stroke-width="2" stroke-dasharray="5 6"/>'+
+ '<circle cx="120" cy="75" r="43" fill="var(--c)"/>'+
+ '<g stroke="'+dk('#a89a8c',.45)+'" stroke-width="3" opacity=".8"><path d="M84 62 q36 12 72 -4"/><path d="M82 82 q40 14 76 -2"/><path d="M92 98 q30 10 58 0"/></g>'+
+ '<g stroke="'+W1+'" stroke-width="2"><path d="M120 6 L120 26"/><path d="M114 20 l6 6 l6 -6"/><path d="M120 144 L120 124"/><path d="M114 130 l6 -6 l6 6"/></g>'),
+
+/* venus */
+city:wrap('<g fill="var(--c)" opacity=".18"><ellipse cx="70" cy="40" rx="48" ry="17"/><ellipse cx="180" cy="34" rx="42" ry="14"/><ellipse cx="128" cy="126" rx="70" ry="18"/></g>'+
+ '<ellipse cx="120" cy="72" rx="46" ry="23" fill="var(--c)" opacity=".85"/>'+
+ '<ellipse cx="120" cy="72" rx="46" ry="23" stroke="'+W1+'" stroke-width="1.6" opacity=".5"/>'+
+ '<path d="M100 92 L100 102 M140 92 L140 102" stroke="'+W1+'" stroke-width="2"/>'+
+ '<rect x="96" y="100" width="48" height="15" rx="4" fill="'+W1+'" opacity=".9"/>'+
+ '<path d="M74 72 L96 72 M144 72 L166 72" stroke="'+W1+'" stroke-width="1.4" opacity=".4"/>'+
+ st([[26,22],[214,112,.9]])),
+smell:wrap('<circle cx="120" cy="88" r="44" fill="var(--c)" opacity=".2"/>'+
+ '<g fill="var(--c)" opacity=".5"><ellipse cx="92" cy="80" rx="30" ry="15"/><ellipse cx="150" cy="92" rx="34" ry="16"/></g>'+
+ '<circle cx="104" cy="48" r="8" fill="'+W1+'"/><circle cx="130" cy="36" r="6" fill="'+W1+'" opacity=".8"/>'+
+ '<circle cx="128" cy="58" r="5.5" fill="'+W1+'" opacity=".7"/><circle cx="82" cy="36" r="5" fill="'+W1+'" opacity=".55"/>'+
+ '<g stroke="'+W1+'" stroke-width="1.6" opacity=".6"><path d="M104 48 L130 36"/><path d="M104 48 L128 58"/></g>'+
+ '<path d="M178 30 q14 0 14 12 q0 10 -14 16 M178 70 l0 6" stroke="'+W1+'" stroke-width="3.5"/>'),
+timer:wrap('<path d="M40 128 L200 128" stroke="var(--c)" stroke-width="3"/>'+
+ '<path d="M96 128 L104 82 L136 82 L144 128 Z" fill="var(--c)" opacity=".75"/>'+
+ '<path d="M110 82 L110 62 M130 82 L130 66" stroke="'+W1+'" stroke-width="2"/>'+
+ '<circle cx="120" cy="54" r="9" stroke="'+W1+'" stroke-width="2"/><path d="M120 54 L120 48 M120 54 L125 57" stroke="'+W1+'" stroke-width="2"/>'+
+ '<g stroke="var(--c)" stroke-width="2.5" opacity=".7"><path d="M64 60 q6 12 0 24"/><path d="M176 60 q-6 12 0 24"/></g>'+
+ '<g fill="'+W1+'" opacity=".55"><circle cx="86" cy="112" r="2"/><circle cx="156" cy="106" r="2"/><circle cx="72" cy="94" r="1.6"/></g>'),
+flip:wrap('<circle cx="120" cy="75" r="42" fill="var(--c)"/>'+
+ '<path d="M120 33 A42 42 0 0 1 120 117" fill="'+dk('#d9b478',.45)+'" opacity=".55"/>'+
+ '<path d="M120 12 A63 63 0 0 0 57 75" stroke="'+W1+'" stroke-width="2.5" stroke-dasharray="5 6"/>'+
+ '<path d="M64 66 l-7 9 l10 6" stroke="'+W1+'" stroke-width="2.5"/>'+
+ '<circle cx="196" cy="34" r="10" fill="'+SUNC+'"/><circle cx="196" cy="34" r="17" fill="'+SUNC+'" opacity=".18"/>'+
+ '<path d="M182 46 L150 62" stroke="'+SUNC+'" stroke-width="2" opacity=".6"/>'),
+
+/* earth + moon */
+grave:wrap('<path d="M0 108 Q60 88 120 100 Q180 112 240 96 L240 150 L0 150 Z" fill="var(--c)" opacity=".16"/>'+
+ '<path d="M0 108 Q60 88 120 100 Q180 112 240 96" stroke="var(--c)" stroke-width="2.5"/>'+
+ '<g fill="var(--c)" opacity=".3"><circle cx="50" cy="118" r="9"/><circle cx="188" cy="116" r="7"/><circle cx="96" cy="130" r="5"/></g>'+
+ '<rect x="112" y="84" width="17" height="22" rx="3" fill="'+W1+'"/>'+
+ '<path d="M120 84 L120 72" stroke="'+W1+'" stroke-width="2"/><circle cx="120" cy="68" r="4" fill="'+W1+'"/>'+
+ '<circle cx="190" cy="40" r="19" fill="'+BLU+'"/><path d="M190 21 A19 19 0 0 1 190 59" fill="#2c6bb0" opacity=".5"/>'+
+ st([[36,30],[92,20,.9],[140,44,.8],[60,58,.7]])),
+junk:wrap('<path d="M0 112 Q120 92 240 110 L240 150 L0 150 Z" fill="var(--c)" opacity=".14"/>'+
+ '<path d="M0 112 Q120 92 240 110" stroke="var(--c)" stroke-width="2.5"/>'+
+ '<circle cx="62" cy="98" r="8" fill="'+W1+'"/><g stroke="#0a0d16" stroke-width="1" opacity=".5"><path d="M58 94 l8 8 M66 94 l-8 8"/></g>'+
+ '<path d="M96 104 q-8 -18 6 -26 q12 -6 14 6 q2 12 -6 20 Z" fill="'+W1+'" opacity=".85"/>'+
+ '<path d="M136 100 l10 -22 l16 6 l-8 20 Z" fill="var(--c)" opacity=".7"/><path d="M138 82 l16 6" stroke="'+W1+'" stroke-width="1.5" opacity=".6"/>'+
+ '<rect x="176" y="80" width="26" height="20" rx="2" fill="'+W1+'" opacity=".9"/><path d="M182 92 l6 -6 l6 6 l4 -4" stroke="#0a0d16" stroke-width="1.6"/>'+
+ '<path d="M40 122 q10 -6 20 0 M150 124 q12 -6 24 0" stroke="var(--c)" stroke-width="2" opacity=".5"/>'+
+ st([[30,32],[206,28,.9],[120,22,.8]])),
+powder:wrap('<path d="M120 26 a42 46 0 0 1 42 46 v28 a42 30 0 0 1 -84 0 v-28 a42 46 0 0 1 42 -46 Z" fill="'+W1+'" opacity=".12" stroke="'+W1+'" stroke-width="2.5"/>'+
+ '<path d="M88 66 q32 -20 64 0 q2 22 -32 26 q-34 -4 -32 -26 Z" fill="var(--c)" opacity=".75"/>'+
+ '<path d="M96 60 q26 -14 50 2" stroke="'+W1+'" stroke-width="2" opacity=".6"/>'+
+ '<g stroke="var(--c)" stroke-width="2.5" opacity=".85"><path d="M182 52 q14 8 0 16 q-14 8 0 16"/><path d="M204 44 q16 12 0 24 q-16 12 0 24"/></g>'+
+ st([[36,34],[46,110,.9],[20,70,.8]])),
+day:wrap('<circle cx="96" cy="74" r="44" stroke="var(--c)" stroke-width="2.5"/>'+
+ '<circle cx="96" cy="74" r="44" fill="var(--c)" opacity=".1"/>'+
+ '<path d="M96 74 L96 42" stroke="'+W1+'" stroke-width="3"/>'+
+ '<path d="M96 74 L128 86" stroke="'+W1+'" stroke-width="3" opacity=".6"/>'+
+ '<path d="M96 74 L146 96" stroke="var(--c)" stroke-width="3" stroke-dasharray="4 5"/>'+
+ '<path d="M150 118 q10 -14 24 -12 q6 -14 20 -8 q12 4 10 16 l-54 4 Z" fill="var(--c)" opacity=".6"/>'+
+ '<path d="M158 122 l-6 12 M186 124 l4 12" stroke="var(--c)" stroke-width="3" opacity=".6"/>'+
+ '<circle cx="196" cy="102" r="2.4" fill="'+W1+'"/>'),
+
+/* mars */
+names:wrap('<path d="M0 116 Q120 100 240 114 L240 150 L0 150 Z" fill="var(--c)" opacity=".2"/>'+
+ '<path d="M0 116 Q120 100 240 114" stroke="var(--c)" stroke-width="2.5"/>'+
+ '<rect x="72" y="42" width="96" height="62" rx="4" fill="#141926" stroke="'+W1+'" stroke-width="2"/>'+
+ '<g stroke="var(--c)" stroke-width="1.4" opacity=".9"><path d="M82 56 L158 56"/><path d="M82 64 L142 64"/><path d="M82 72 L158 72"/><path d="M82 80 L134 80"/><path d="M82 88 L152 88"/></g>'+
+ '<g stroke="'+W1+'" stroke-width="1.6" opacity=".55"><path d="M66 50 L44 38"/><path d="M174 50 L198 38"/></g>'+
+ '<circle cx="40" cy="34" r="4" fill="'+W1+'"/><circle cx="202" cy="34" r="4" fill="'+W1+'"/>'+
+ st([[26,70,1.2,.4],[212,86,1.2,.4]])),
+morse:wrap('<path d="M0 104 L240 104" stroke="var(--c)" stroke-width="2" opacity=".5"/>'+
+ '<path d="M0 104 L240 104 L240 150 L0 150 Z" fill="var(--c)" opacity=".14"/>'+
+ '<rect x="86" y="46" width="68" height="34" rx="4" fill="'+W1+'" opacity=".9"/>'+
+ '<circle cx="98" cy="88" r="14" fill="#141926" stroke="'+W1+'" stroke-width="2.5"/>'+
+ '<circle cx="142" cy="88" r="14" fill="#141926" stroke="'+W1+'" stroke-width="2.5"/>'+
+ '<path d="M104 40 L104 24 M136 40 L136 28" stroke="'+W1+'" stroke-width="2"/><circle cx="104" cy="21" r="3" fill="'+W1+'"/>'+
+ '<g stroke="'+W1+'" stroke-width="3.5" opacity=".85"><path d="M12 124 l0 0"/><path d="M20 124 l6 0"/><path d="M34 124 l0 0"/><path d="M44 124 l16 0"/><path d="M66 124 l16 0"/><path d="M88 124 l16 0"/></g>'+
+ '<g stroke="'+W1+'" stroke-width="3.5" opacity=".4"><path d="M162 124 l6 0"/><path d="M176 124 l16 0"/><path d="M198 124 l16 0"/></g>'),
+chute:wrap('<path d="M46 62 A74 74 0 0 1 194 62 Z" fill="var(--c)" opacity=".3"/>'+
+ '<path d="M46 62 A74 74 0 0 1 194 62" stroke="'+W1+'" stroke-width="2.5"/>'+
+ '<path d="M46 62 L194 62" stroke="'+W1+'" stroke-width="2"/>'+
+ '<path d="M83 62 A37 37 0 0 1 157 62" stroke="'+W1+'" stroke-width="2" opacity=".6"/>'+
+ '<path d="M64 42 A56 56 0 0 1 176 42" stroke="'+W1+'" stroke-width="2" opacity=".35"/>'+
+ '<g fill="var(--c)"><rect x="96" y="30" width="10" height="9"/><rect x="118" y="30" width="18" height="9"/><rect x="146" y="30" width="9" height="9"/>'+
+ '<rect x="88" y="48" width="18" height="9"/><rect x="116" y="48" width="9" height="9"/><rect x="136" y="48" width="18" height="9"/></g>'+
+ '<path d="M64 64 L112 104 M176 64 L128 104" stroke="'+W1+'" stroke-width="1.6"/>'+
+ '<rect x="108" y="104" width="24" height="18" rx="3" fill="'+W1+'"/>'),
+mount:wrap('<path d="M0 132 L240 132" stroke="'+DIMS+'" stroke-width="2" stroke-dasharray="6 6"/>'+
+ '<path d="M-10 132 C60 126 120 112 240 60 L240 132 Z" fill="var(--c)" opacity=".28"/>'+
+ '<path d="M-10 132 C60 126 120 112 240 60" stroke="var(--c)" stroke-width="2.5"/>'+
+ '<circle cx="62" cy="120" r="4" fill="'+W1+'"/><path d="M62 116 L62 106" stroke="'+W1+'" stroke-width="2.5"/>'+
+ '<path d="M62 106 L54 96 M62 106 L70 96 M62 112 L54 120 M62 112 L70 120" stroke="'+W1+'" stroke-width="2.5"/>'+
+ '<path d="M96 88 L186 88" stroke="'+W1+'" stroke-width="1.6" stroke-dasharray="4 5" opacity=".6"/>'+
+ '<path d="M178 82 l8 6 l-8 6" stroke="'+W1+'" stroke-width="1.6" opacity=".6"/>'+
+ st([[40,34],[196,26,.9],[120,20,.8]])),
+
+/* jupiter */
+banana:wrap('<circle cx="170" cy="78" r="38" fill="var(--c)" opacity=".8"/>'+
+ '<g stroke="'+dk('#c99560',.4)+'" stroke-width="3" opacity=".7"><path d="M136 66 q34 10 68 -4"/><path d="M136 88 q34 10 68 -4"/></g>'+
+ '<path d="M108 62 C70 58 40 76 44 100 C48 120 78 124 96 110" fill="#f2e07a" opacity=".22"/>'+
+ '<path d="M108 62 C70 58 40 76 44 100 C48 120 78 124 96 110" stroke="#f2e07a" stroke-width="2.5" opacity=".7"/>'+
+ '<circle cx="108" cy="76" r="13" fill="#f0d86a"/>'+
+ '<g fill="#f2e07a" opacity=".55"><circle cx="82" cy="78" r="2.4"/><circle cx="64" cy="92" r="2"/><circle cx="56" cy="106" r="1.8"/></g>'),
+ocean:wrap('<circle cx="120" cy="80" r="62" fill="'+ICE+'" opacity=".14"/>'+
+ '<circle cx="120" cy="80" r="62" stroke="'+ICE+'" stroke-width="2.5"/>'+
+ '<circle cx="120" cy="80" r="46" stroke="'+ICE+'" stroke-width="1.6" opacity=".5"/>'+
+ '<g stroke="'+ICE+'" stroke-width="2" opacity=".85"><path d="M64 56 L172 66"/><path d="M70 104 L176 92"/><path d="M96 24 L112 134"/></g>'+
+ '<circle cx="120" cy="80" r="46" fill="#1d6fa8" opacity=".3"/>'+
+ '<path d="M108 92 q-14 -6 -22 2 q10 8 22 4 q10 10 22 -2 q-12 -10 -22 -4 Z" fill="'+W1+'" opacity=".8"/>'+
+ '<circle cx="112" cy="88" r="1.8" fill="#141926"/>'+
+ '<path d="M198 26 q10 0 10 9 q0 8 -10 12 M198 58 l0 5" stroke="'+W1+'" stroke-width="3" opacity=".8"/>'),
+dive:wrap('<circle cx="150" cy="86" r="70" fill="var(--c)" opacity=".5"/>'+
+ '<g stroke="'+dk('#c99560',.45)+'" stroke-width="4" opacity=".55"><path d="M86 62 q64 14 128 -6"/><path d="M88 92 q64 14 126 -8"/><path d="M104 118 q48 10 94 -6"/></g>'+
+ '<path d="M26 24 L96 70" stroke="'+W1+'" stroke-width="2" stroke-dasharray="5 5"/>'+
+ '<g transform="translate(100 74) rotate(33)"><rect x="-12" y="-6" width="24" height="12" rx="2" fill="'+W1+'"/>'+
+ '<rect x="-24" y="-3" width="10" height="6" fill="'+W1+'" opacity=".7"/><rect x="14" y="-3" width="10" height="6" fill="'+W1+'" opacity=".7"/></g>'+
+ '<circle cx="42" cy="118" r="15" fill="'+ICE+'" opacity=".35"/><circle cx="42" cy="118" r="15" stroke="'+ICE+'" stroke-width="2"/>'+
+ '<path d="M42 96 a22 22 0 0 1 0 44" stroke="'+W1+'" stroke-width="2" stroke-dasharray="3 4" opacity=".6"/>'),
+wobble:wrap('<circle cx="86" cy="75" r="40" fill="'+SUNC+'"/><circle cx="86" cy="75" r="52" fill="'+SUNC+'" opacity=".14"/>'+
+ '<circle cx="196" cy="75" r="20" fill="var(--c)"/>'+
+ '<circle cx="132" cy="75" r="3.5" fill="'+W1+'"/>'+
+ '<circle cx="132" cy="75" r="16" stroke="'+W1+'" stroke-width="1.6" stroke-dasharray="4 5" opacity=".8"/>'+
+ '<circle cx="132" cy="75" r="64" stroke="'+DIMS+'" stroke-width="1.6" stroke-dasharray="5 6"/>'+
+ '<path d="M132 118 L132 134" stroke="'+W1+'" stroke-width="1.6" opacity=".6"/>'),
+
+/* saturn */
+young:wrap('<ellipse cx="128" cy="62" rx="88" ry="26" stroke="var(--c)" stroke-width="3" opacity=".8"/>'+
+ '<ellipse cx="128" cy="62" rx="66" ry="19" stroke="var(--c)" stroke-width="2" opacity=".45"/>'+
+ '<circle cx="128" cy="62" r="30" fill="var(--c)"/>'+
+ '<path d="M32 138 q10 -22 26 -20 q6 -16 20 -10 q10 4 8 16 q14 0 14 14 Z" fill="'+W1+'" opacity=".22"/>'+
+ '<path d="M36 138 q6 -18 22 -18 q4 -14 18 -10 q12 4 10 14" stroke="'+W1+'" stroke-width="2" opacity=".6"/>'+
+ '<path d="M56 120 l-4 -10 l8 4" stroke="'+W1+'" stroke-width="2" opacity=".6"/>'+
+ '<circle cx="70" cy="114" r="1.8" fill="'+W1+'" opacity=".7"/>'+
+ '<path d="M150 116 L212 116" stroke="'+DIMS+'" stroke-width="1.6"/>'+
+ '<path d="M150 110 L150 122 M212 110 L212 122 M182 112 L182 120" stroke="'+DIMS+'" stroke-width="1.6"/>'),
+plume:wrap('<path d="M0 118 Q120 96 240 116 L240 150 L0 150 Z" fill="'+ICE+'" opacity=".16"/>'+
+ '<path d="M0 118 Q120 96 240 116" stroke="'+ICE+'" stroke-width="2.5"/>'+
+ '<path d="M108 104 L84 18 M120 102 L120 12 M132 104 L156 20" stroke="'+ICE+'" stroke-width="2.5" opacity=".7"/>'+
+ '<path d="M96 104 L60 34" stroke="'+ICE+'" stroke-width="2" opacity=".4"/><path d="M144 106 L180 36" stroke="'+ICE+'" stroke-width="2" opacity=".4"/>'+
+ '<g fill="'+ICE+'" opacity=".75"><circle cx="86" cy="40" r="2.4"/><circle cx="120" cy="28" r="2.8"/><circle cx="150" cy="44" r="2.2"/><circle cx="104" cy="60" r="1.8"/><circle cx="138" cy="70" r="2"/></g>'+
+ '<g transform="translate(196 44) rotate(-20)"><rect x="-13" y="-5" width="26" height="10" rx="2" fill="'+W1+'"/><rect x="-24" y="-3" width="9" height="6" fill="'+W1+'" opacity=".7"/></g>'+
+ '<g stroke="var(--c)" stroke-width="2.5" opacity=".8"><path d="M40 138 q8 -10 16 0 q8 10 16 0"/><path d="M172 140 q8 -10 16 0 q8 10 16 0"/></g>'),
+walnut:wrap('<circle cx="120" cy="75" r="50" fill="'+W1+'" opacity=".9"/>'+
+ '<path d="M120 25 A50 50 0 0 1 120 125 Z" fill="#191b22"/>'+
+ '<path d="M120 25 A50 50 0 0 1 120 125" stroke="'+DIMS+'" stroke-width="1.5"/>'+
+ '<path d="M70 75 q50 -16 100 0 q-50 16 -100 0 Z" fill="var(--c)" opacity=".9"/>'+
+ '<path d="M70 75 q50 -16 100 0" stroke="var(--c)" stroke-width="3"/>'+
+ '<circle cx="96" cy="56" r="4" fill="#191b22" opacity=".5"/><circle cx="82" cy="92" r="3" fill="#191b22" opacity=".4"/>'+
+ '<circle cx="148" cy="52" r="3.5" fill="'+W1+'" opacity=".3"/>'+
+ st([[30,28],[210,118,.9],[26,120,.8]])),
+death:wrap('<circle cx="120" cy="75" r="52" fill="var(--c)" opacity=".85"/>'+
+ '<circle cx="146" cy="52" r="20" fill="'+dk('#d6c087',.55)+'"/>'+
+ '<circle cx="146" cy="52" r="20" stroke="'+W1+'" stroke-width="2" opacity=".5"/>'+
+ '<circle cx="146" cy="52" r="11" fill="'+dk('#d6c087',.7)+'"/>'+
+ '<g fill="'+dk('#d6c087',.4)+'" opacity=".7"><circle cx="90" cy="98" r="8"/><circle cx="110" cy="112" r="5"/><circle cx="76" cy="66" r="4"/></g>'+
+ '<path d="M74 110 q46 22 92 0" stroke="'+ICE+'" stroke-width="3" stroke-dasharray="6 5" opacity=".85"/>'+
+ '<g fill="'+ICE+'" opacity=".8"><circle cx="100" cy="120" r="2.4"/><circle cx="140" cy="120" r="2"/></g>'),
+
+/* uranus */
+egg:wrap('<circle cx="104" cy="78" r="46" fill="var(--c)" opacity=".85"/>'+
+ '<path d="M104 32 A46 46 0 0 1 104 124" fill="'+dk('#8fd4da',.45)+'" opacity=".45"/>'+
+ '<g stroke="var(--c)" stroke-width="2.5" opacity=".6"><path d="M156 40 q12 10 0 20 q-12 10 0 20"/><path d="M176 30 q14 14 0 28 q-14 14 0 28"/></g>'+
+ '<path d="M198 92 q12 4 12 16 q0 12 -14 14 q-14 2 -16 -10" stroke="'+W1+'" stroke-width="2.5" opacity=".75"/>'+
+ '<path d="M196 122 l-4 10 M206 124 l2 10" stroke="'+W1+'" stroke-width="2.5" opacity=".75"/>'+
+ st([[30,30],[46,122,.9],[214,18,.8]])),
+diamond:wrap('<path d="M0 108 Q120 88 240 106 L240 150 L0 150 Z" fill="var(--c)" opacity=".2"/>'+
+ '<path d="M0 108 Q120 88 240 106" stroke="var(--c)" stroke-width="2.5"/>'+
+ '<g stroke="'+ICE+'" stroke-width="2"><path d="M50 18 l12 14 l-12 16 l-12 -16 Z"/><path d="M38 32 L62 32"/></g>'+
+ '<g stroke="'+ICE+'" stroke-width="2"><path d="M120 44 l14 16 l-14 18 l-14 -18 Z"/><path d="M106 60 L134 60"/></g>'+
+ '<g stroke="'+ICE+'" stroke-width="2" opacity=".75"><path d="M186 14 l10 12 l-10 14 l-10 -14 Z"/><path d="M176 26 L196 26"/></g>'+
+ '<g stroke="'+ICE+'" stroke-width="1.8" opacity=".5"><path d="M82 82 l8 9 l-8 11 l-8 -11 Z"/><path d="M204 76 l8 9 l-8 11 l-8 -11 Z"/></g>'+
+ '<g stroke="'+ICE+'" stroke-width="1.5" opacity=".35"><path d="M50 62 L50 74"/><path d="M120 92 L120 102"/><path d="M186 50 L186 62"/></g>'),
+roll:wrap('<path d="M14 120 L226 120" stroke="'+DIMS+'" stroke-width="2" stroke-dasharray="6 6"/>'+
+ '<circle cx="96" cy="76" r="40" fill="var(--c)" opacity=".85"/>'+
+ '<ellipse cx="96" cy="76" rx="14" ry="54" stroke="'+W1+'" stroke-width="2" opacity=".6"/>'+
+ '<path d="M96 14 L96 138" stroke="'+W1+'" stroke-width="2" stroke-dasharray="5 5" opacity=".8"/>'+
+ '<circle cx="96" cy="22" r="4" fill="'+W1+'"/>'+
+ '<circle cx="196" cy="48" r="13" fill="'+SUNC+'"/><circle cx="196" cy="48" r="22" fill="'+SUNC+'" opacity=".16"/>'+
+ '<g stroke="'+SUNC+'" stroke-width="2" opacity=".55"><path d="M180 56 L142 68"/><path d="M182 42 L146 40"/></g>'+
+ '<path d="M136 120 q22 -12 44 0" stroke="'+W1+'" stroke-width="2" opacity=".4"/>'),
+missed:wrap('<rect x="24" y="18" width="192" height="114" rx="4" stroke="'+DIMS+'" stroke-width="1.6"/>'+
+ st([[52,44,1.6,.5],[92,34,1.2,.4],[140,52,1.8,.55],[184,38,1.1,.35],[64,88,1.4,.45],[112,102,1.6,.5],[168,94,1.2,.4],[196,116,1,.3],[44,118,1.3,.4],[150,120,1.1,.35],[86,64,1,.3]])+
+ '<circle cx="140" cy="76" r="6" fill="var(--c)"/>'+
+ '<circle cx="140" cy="76" r="17" stroke="var(--c)" stroke-width="2"/>'+
+ '<path d="M140 93 L140 124" stroke="var(--c)" stroke-width="1.6" stroke-dasharray="3 4"/>'+
+ '<path d="M157 76 L196 62" stroke="var(--c)" stroke-width="1.6" stroke-dasharray="3 4"/>'),
+
+/* neptune */
+pencil:wrap('<rect x="22" y="26" width="118" height="102" rx="3" fill="'+W1+'" opacity=".07" stroke="'+DIMS+'" stroke-width="1.6"/>'+
+ '<g stroke="'+W1+'" stroke-width="1.6" opacity=".55"><path d="M36 48 L112 48"/><path d="M36 62 L126 62"/><path d="M36 76 L98 76"/><path d="M36 104 L120 104"/></g>'+
+ '<path d="M36 88 L82 88" stroke="var(--c)" stroke-width="2.5"/>'+
+ '<circle cx="100" cy="88" r="7" fill="var(--c)"/>'+
+ '<path d="M160 118 L214 46" stroke="'+W1+'" stroke-width="3"/>'+
+ '<path d="M206 40 l14 -8 l-4 16 Z" fill="'+W1+'"/>'+
+ '<circle cx="186" cy="30" r="8" fill="var(--c)"/><circle cx="186" cy="30" r="15" fill="var(--c)" opacity=".2"/>'+
+ '<path d="M160 118 l-8 10" stroke="'+W1+'" stroke-width="3"/>'),
+tear:wrap('<circle cx="76" cy="80" r="42" fill="var(--c)" opacity=".8"/>'+
+ '<ellipse cx="160" cy="80" rx="62" ry="17" stroke="var(--c)" stroke-width="2.5" stroke-dasharray="7 6" opacity=".8"/>'+
+ '<circle cx="196" cy="70" r="11" fill="'+W1+'" opacity=".85"/>'+
+ '<path d="M188 62 l16 16 M204 62 l-16 16" stroke="var(--c)" stroke-width="1.6" opacity=".6"/>'+
+ '<g fill="'+W1+'" opacity=".6"><circle cx="146" cy="88" r="3"/><circle cx="168" cy="72" r="2.2"/><circle cx="126" cy="76" r="2"/><circle cx="212" cy="90" r="2.4"/></g>'+
+ '<path d="M56 46 q10 -12 22 -4" stroke="'+W1+'" stroke-width="2" opacity=".4"/>'),
+gone:wrap('<circle cx="120" cy="76" r="54" fill="var(--c)" opacity=".8"/>'+
+ '<ellipse cx="102" cy="64" rx="24" ry="15" fill="#0d1226" opacity=".85"/>'+
+ '<ellipse cx="150" cy="96" rx="16" ry="10" fill="#0d1226" opacity=".3" stroke="'+W1+'" stroke-width="1.5" stroke-dasharray="4 4"/>'+
+ '<g stroke="'+dk('#7089f2',.35)+'" stroke-width="2.5" opacity=".6"><path d="M72 44 q48 10 96 -6"/><path d="M74 110 q46 10 92 -8"/></g>'+
+ '<path d="M186 34 l14 14 M200 34 l-14 14" stroke="'+W1+'" stroke-width="2.5" opacity=".7"/>'+
+ st([[30,34],[36,116,.9],[212,110,.8]])),
+wind:wrap('<circle cx="86" cy="76" r="46" fill="var(--c)" opacity=".75"/>'+
+ '<g stroke="'+W1+'" stroke-width="3" opacity=".85"><path d="M132 50 q40 -6 74 2"/><path d="M198 44 l10 8 l-12 6"/>'+
+ '<path d="M126 76 q52 -6 92 4"/><path d="M210 76 l10 4 l-10 6"/>'+
+ '<path d="M130 104 q44 -4 76 6"/><path d="M198 106 l10 4 l-10 6"/></g>'+
+ '<g stroke="'+W1+'" stroke-width="2" opacity=".35"><path d="M40 52 q20 -6 34 0"/><path d="M34 104 q22 -4 36 2"/></g>'+
+ '<circle cx="204" cy="126" r="5" fill="'+SUNC+'" opacity=".5"/>')
+};
+
+/* ---------- data ---------- */
+var B=[
+{id:'sun',name:'Mặt Trời',kind:'Sao lùn vàng G2V',c:'#ffc257',dist:0,
+ tag:'Giữ 99,86% khối lượng của cả hệ. Mọi thứ còn lại chỉ là phần dư của phép làm tròn.',
+ data:[['Đường kính','1.392.000 km'],['Bề mặt','~5.500 °C'],['Lõi','~15 triệu °C'],['Tuổi','4,6 tỉ năm']],
+ notes:[
+ {i:'white',h:'Mặt Trời thật ra màu trắng',t:'Nó phát gần như đủ mọi màu. Bầu khí quyển Trái Đất hất bớt ánh xanh đi nên ta thấy còn lại vàng. <em>Phi hành gia trên quỹ đạo nhìn thấy nó trắng tinh.</em>'},
+ {i:'bell',h:'Nó kêu như một quả chuông',t:'Toàn bộ ngôi sao rung theo hàng triệu nốt cùng lúc. Các nhà khoa học đo những nốt đó để <em>nhìn xuyên vào lõi</em>, y như bác sĩ siêu âm.'},
+ {i:'slow',h:'Nắng hôm nay già hơn loài người',t:'Năng lượng từ lõi bị hấp thụ rồi bắn lại liên tục, mất hàng chục nghìn năm mới thoát ra tới bề mặt. Chặng cuối tới mắt bạn thì nhanh: 8 phút 20 giây.'},
+ {i:'spin',h:'Bạn chưa từng đi qua chỗ này hai lần',t:'Mặt Trời kéo cả hệ chạy vòng quanh Ngân Hà, 230 km mỗi giây. Lần cuối nó ở đúng điểm này trên quỹ đạo, <em>khủng long còn chưa ra đời.</em>'}]},
+
+{id:'mercury',name:'Sao Thủy',kind:'Hành tinh đá · quỹ đạo 1',c:'#a89a8c',dist:57.9,
+ tag:'Một lõi sắt to quá khổ khoác lớp vỏ mỏng, không có khí quyển để giữ lại thứ gì.',
+ data:[['Đường kính','4.879 km'],['Một năm','88 ngày'],['Một ngày','176 ngày'],['Nhiệt độ','−180 … 430 °C']],
+ notes:[
+ {i:'near',h:'Hành tinh gần Trái Đất nhất chính là nó',t:'Nghe vô lý nhưng tính trung bình theo thời gian thì đúng. Sao Kim có lúc rất gần, nhưng phần lớn thời gian nó ở bên kia Mặt Trời. <em>Sao Thủy thì luôn quanh quẩn gần.</em>'},
+ {i:'back',h:'Ở đây Mặt Trời biết đi lùi',t:'Có những nơi trên Sao Thủy, giữa ban ngày Mặt Trời <em>khựng lại, lùi ngược vài hôm</em>, rồi mới đi tiếp. Quỹ đạo quá dẹt gây ra chuyện đó.'},
+ {i:'ice',h:'Có băng ở ngay cạnh Mặt Trời',t:'Đáy vài hố ở hai cực chưa từng thấy nắng suốt hàng tỉ năm. Tàu MESSENGER phát hiện <em>băng nước</em> nằm im trong mấy cái bẫy lạnh đó.'},
+ {i:'shrink',h:'Nó đang tóp lại',t:'Lõi sắt nguội dần, kéo lớp vỏ nhăn nhúm thành những vách đá cao 3 km. Hành tinh đã mất vài km vòng eo, và có vẻ vẫn chưa dừng.'}]},
+
+{id:'venus',name:'Sao Kim',kind:'Hành tinh đá · quỹ đạo 2',c:'#d9b478',dist:108.2,
+ tag:'Gần bằng Trái Đất về kích thước và khối lượng. Hết, đó là chỗ giống nhau duy nhất.',
+ data:[['Đường kính','12.104 km'],['Một năm','225 ngày'],['Một ngày','243 ngày, quay ngược'],['Bề mặt','~465 °C']],
+ notes:[
+ {i:'city',h:'Có một tầng mây dễ sống hơn cả Sao Hỏa',t:'Ở độ cao 50 km, nhiệt độ quanh 30 °C và áp suất bằng mặt đất Trái Đất. NASA từng vẽ hẳn bản thiết kế <em>thành phố khí cầu trôi lơ lửng</em> ở đó.'},
+ {i:'smell',h:'Năm 2020 người ta tưởng đã ngửi thấy sự sống',t:'Kính thiên văn bắt được dấu hiệu phosphine trong mây, thứ trên Trái Đất chủ yếu do vi khuẩn tạo ra. Giới khoa học cãi nhau tới giờ và <em>vẫn chưa ngã ngũ.</em>'},
+ {i:'timer',h:'Kỷ lục sống sót ở đó: 127 phút',t:'Các tàu Venera của Liên Xô là thứ duy nhất từng chụp được bề mặt. Cái trụ lâu nhất gửi ảnh về đúng hai tiếng rồi bị nghiền nát.'},
+ {i:'flip',h:'Ngày dài hơn năm, và Mặt Trời mọc đằng tây',t:'Một vòng tự quay mất 243 ngày, một vòng quanh Mặt Trời chỉ 225. Nó còn quay ngược chiều so với gần như tất cả hàng xóm.'}]},
+
+{id:'earth',name:'Trái Đất',kind:'Hành tinh đá · quỹ đạo 3',c:'#4a94e0',dist:149.6,
+ tag:'Nơi duy nhất từng xác nhận có sự sống, và cũng là nơi duy nhất có người đang đọc câu này.',
+ data:[['Đường kính','12.742 km'],['Khối lượng riêng','5,51 g/cm³'],['Một ngày','23 giờ 56 phút'],['Vệ tinh','1']],
+ notes:[
+ {i:'grave',h:'Có đúng một người được chôn trên Mặt Trăng',t:'Tro của nhà địa chất Eugene Shoemaker được gửi lên cùng tàu Lunar Prospector năm 1998. <em>Ông là người duy nhất yên nghỉ ngoài Trái Đất.</em>'},
+ {i:'junk',h:'Trên đó còn hai quả bóng golf và 96 túi rác',t:'Phi hành gia để lại hơn 180 tấn đồ: bóng golf Alan Shepard đánh, một chiếc lông vũ, tấm ảnh gia đình Charles Duke đặt xuống, và <em>gần trăm túi chất thải.</em>'},
+ {i:'powder',h:'Bụi Mặt Trăng có mùi thuốc súng',t:'Bụi bám đầy bộ đồ, vào khoang là bốc mùi. Các phi hành gia Apollo đều tả giống nhau: <em>khét như vừa bắn xong một loạt đạn.</em>'},
+ {i:'day',h:'Khủng long sống trong ngày ngắn hơn bạn',t:'Mặt Trăng kéo Trái Đất quay chậm dần. Cách đây 70 triệu năm, <em>một ngày chỉ dài 23 tiếng rưỡi</em> và một năm có tới 372 ngày.'}]},
+
+{id:'mars',name:'Sao Hỏa',kind:'Hành tinh đá · quỹ đạo 4',c:'#dd7050',dist:227.9,
+ tag:'Sa mạc lạnh, khí quyển mỏng, và địa hình lớn quá đáng so với cỡ hành tinh.',
+ data:[['Đường kính','6.779 km'],['Một năm','687 ngày'],['Một ngày','24 giờ 37 phút'],['Vệ tinh','2']],
+ notes:[
+ {i:'names',h:'10,9 triệu cái tên đã đặt chân lên Sao Hỏa',t:'NASA khắc tên người đăng ký lên ba con chip silicon bằng đầu ngón tay rồi gắn lên xe Perseverance. <em>Tên bạn có thể lên đó miễn phí ở đợt sau.</em>'},
+ {i:'morse',h:'Bánh xe robot viết mật mã lên cát',t:'Lỗ trên bánh xe Curiosity in xuống đất một hoa văn lặp đi lặp lại. Giải ra thì đó là <em>mã Morse của chữ JPL</em>, tên phòng thí nghiệm chế ra nó.'},
+ {i:'chute',h:'Chiếc dù rơi xuống kèm một câu đố',t:'Hoa văn cam trắng trên dù của Perseverance là mã nhị phân. Dân mạng giải xong trong vài giờ: <em>"Dare Mighty Things"</em>, kèm tọa độ trụ sở NASA.'},
+ {i:'mount',h:'Đứng trên núi cao nhất mà không biết mình đang leo',t:'Olympus Mons cao 22 km nhưng chân rộng 600 km, sườn thoải như đồng bằng. Đứng trên đó, <em>đỉnh núi nằm khuất sau đường chân trời.</em>'}]},
+
+{id:'jupiter',name:'Sao Mộc',kind:'Hành tinh khí · quỹ đạo 5',c:'#c99560',dist:778.5,
+ tag:'Nặng gấp 2,5 lần bảy hành tinh còn lại cộng lại, và không có bề mặt nào để đứng.',
+ data:[['Đường kính','139.820 km'],['Khối lượng','318 × Trái Đất'],['Một ngày','9 giờ 56 phút'],['Vệ tinh','hơn 90']],
+ notes:[
+ {i:'ocean',h:'Nhiều nước hơn cả Trái Đất, và người ta thật sự đang tìm sinh vật ở đó',t:'Dưới vỏ băng của Europa là đại dương mặn sâu tới 100 km, <em>nhiều nước hơn mọi đại dương Trái Đất cộng lại.</em> Tàu Europa Clipper đang trên đường tới xem có gì sống dưới đó.'},
+ {i:'dive',h:'NASA cố ý lao tàu vào Sao Mộc để bảo vệ Europa',t:'Hết nhiên liệu, tàu Galileo có nguy cơ rơi xuống Europa và mang theo vi khuẩn Trái Đất. Năm 2003 NASA <em>cho nó đâm thẳng vào Sao Mộc</em> để giữ nơi đó sạch.'},
+ {i:'banana',h:'Một vệ tinh ở đây để lại vệt đuôi hình quả chuối',t:'Io bị bóp méo tới mức núi lửa phun liên tục, thổi natri ra không gian. Đám khí đó bị Sao Mộc uốn thành <em>một vệt sáng cong như quả chuối</em> dài hàng triệu km.'},
+ {i:'wobble',h:'Sao Mộc không thật sự quay quanh Mặt Trời',t:'Nó nặng đến nỗi khối tâm chung của hai bên <em>nằm lơ lửng bên ngoài mặt Mặt Trời.</em> Về kỹ thuật, cả hai đang cùng quay quanh một điểm trống trong không gian.'}]},
+
+{id:'saturn',name:'Sao Thổ',kind:'Hành tinh khí · quỹ đạo 6',c:'#d6c087',dist:1433,
+ tag:'Nhẹ hơn nước nếu tính theo thể tích, và đeo thứ trang sức rộng 280.000 km.',
+ data:[['Đường kính','116.460 km'],['Khối lượng riêng','0,69 g/cm³'],['Một ngày','10 giờ 33 phút'],['Vệ tinh','hơn 140']],
+ notes:[
+ {i:'plume',h:'Tàu vũ trụ đã bay xuyên qua tia nước và nếm thử',t:'Enceladus phun nước từ dưới lớp băng lên thẳng không gian. Cassini lao qua và tìm thấy muối, phân tử hữu cơ, dấu hiệu <em>miệng phun thủy nhiệt dưới đáy biển</em>, đúng kiểu chỗ giun ống khổng lồ sống trên Trái Đất.'},
+ {i:'young',h:'Vành đai có thể trẻ hơn khủng long',t:'Dữ liệu Cassini cho thấy vành đai mới khoảng 100 đến 400 triệu năm tuổi. <em>Khủng long nhiều khả năng đã sống và tuyệt chủng mà chưa từng thấy nó.</em>'},
+ {i:'walnut',h:'Có một vệ tinh nửa trắng nửa đen, giống quả óc chó',t:'Iapetus một mặt sáng như tuyết, mặt kia đen như nhựa đường. Quanh xích đạo còn có <em>gờ núi cao 20 km chạy vòng quanh</em>, chưa ai giải thích xong vì sao.'},
+ {i:'death',h:'Vệ tinh giống Ngôi Sao Chết có thể giấu một đại dương',t:'Mimas mang cái hố khổng lồ khiến nó trông y hệt vũ khí trong Star Wars. Năm 2024, phân tích quỹ đạo cho thấy <em>bên dưới có thể là biển nước lỏng còn rất trẻ.</em>'}]},
+
+{id:'uranus',name:'Sao Thiên Vương',kind:'Hành tinh băng · quỹ đạo 7',c:'#8fd4da',dist:2872,
+ tag:'Nằm nghiêng gần 98 độ, lăn trên quỹ đạo thay vì quay đứng như mọi hành tinh khác.',
+ data:[['Đường kính','50.724 km'],['Nghiêng trục','97,8°'],['Một năm','84 năm'],['Lạnh nhất','−224 °C']],
+ notes:[
+ {i:'egg',h:'Nó bốc mùi trứng thối',t:'Năm 2018 kính Gemini xác nhận đỉnh mây đầy hydro sulfua. Nếu tháo mũ ra hít một hơi, <em>thứ giết bạn sẽ không phải cái mùi</em>, nhưng bạn vẫn kịp ngửi thấy nó.'},
+ {i:'diamond',h:'Bên trong có thể đang mưa kim cương',t:'Sâu vài nghìn km, áp suất bẻ gãy phân tử metan và nén carbon lại. Thí nghiệm trong phòng lab cho ra <em>kim cương rắn rơi xuống như mưa đá.</em>'},
+ {i:'roll',h:'42 năm nắng liên tục, rồi 42 năm đêm',t:'Vì nằm nghiêng gần vuông góc, mùa hè ở một cực nghĩa là Mặt Trời treo lơ lửng suốt bốn thập kỷ, rồi tới lượt bốn thập kỷ không có bình minh nào.'},
+ {i:'missed',h:'Người ta nhìn thẳng vào nó suốt gần trăm năm mà không nhận ra',t:'Trước khi Herschel phát hiện năm 1781, các nhà thiên văn đã ghi nó vào bản đồ ít nhất hơn hai chục lần, <em>và lần nào cũng đánh dấu nhầm là một ngôi sao.</em>'}]},
+
+{id:'neptune',name:'Sao Hải Vương',kind:'Hành tinh băng · quỹ đạo 8',c:'#7089f2',dist:4495,
+ tag:'Được tìm ra bằng bút chì trước khi có ai chĩa kính thiên văn về phía nó.',
+ data:[['Đường kính','49.244 km'],['Cách Mặt Trời','30 × Trái Đất'],['Một năm','164,8 năm'],['Gió mạnh nhất','~2.100 km/h']],
+ notes:[
+ {i:'pencil',h:'Tìm ra trên giấy trước khi thấy trên trời',t:'Quỹ đạo Sao Thiên Vương lệch so với tính toán, nên Le Verrier đoán có hành tinh lạ đang kéo nó và tính ra chỗ đứng. Đêm 23/9/1846, Galle chĩa kính về đúng điểm đó và <em>thấy nó trong vòng một giờ.</em>'},
+ {i:'tear',h:'Sao Hải Vương sắp có vành đai, bằng cách xé vệ tinh của mình',t:'Triton quay ngược chiều hành tinh, dấu hiệu rõ của một kẻ bị bắt từ vành đai Kuiper. Quỹ đạo nó đang hạ dần, và cuối cùng <em>lực triều sẽ xé nó thành một vòng mảnh vỡ.</em>'},
+ {i:'gone',h:'Cơn bão to bằng Trái Đất đã biến mất không dấu vết',t:'Voyager 2 chụp được Vết Đen Lớn năm 1989. Năm năm sau Hubble nhìn lại thì <em>nó bốc hơi hoàn toàn</em>, rồi những vết khác lần lượt hiện ra và tan đi.'},
+ {i:'wind',h:'Gió siêu thanh ở nơi gần như không có nắng',t:'Gió đạt 2.100 km/h dù hành tinh nhận chưa tới một phần chín trăm ánh sáng của Trái Đất. <em>Không ai giải thích trọn vẹn được lấy năng lượng từ đâu.</em>'}]}
+];
+var P=B.filter(function(b){return b.id!=='sun'});
+function get(id){for(var i=0;i<B.length;i++)if(B[i].id===id)return B[i];return B[0]}
+
+var MOON={name:'Mặt Trăng',c:'#cfd3dc'};
+function thing(id){return id==='moon'?MOON:get(id)}
+
+var ABQ=[
+{q:'Cái nào nóng hơn?',u:'°C',a:{id:'mercury',v:430},b:{id:'venus',v:465},win:'b',viz:'bar',
+ why:'Sao Thủy nằm sát Mặt Trời hơn hẳn, nhưng nó trần trụi. Sao Kim có lớp mây dày đắp lên như cái chăn bông, nên nóng hơn dù ở xa hơn.'},
+{q:'Hành tinh nào to hơn?',u:'km',a:{id:'jupiter',v:139820},b:{id:'saturn',v:116460},win:'a',viz:'size',
+ why:'Sao Mộc là anh cả. Nếu moi rỗng ruột nó ra, bạn nhét vừa hơn 1.300 quả Trái Đất vào trong.'},
+{q:'Tính trung bình cả năm, cái nào gần Trái Đất hơn?',u:'triệu km',a:{id:'mercury',v:155},b:{id:'venus',v:170},win:'a',viz:'bar',
+ why:'Sao Kim có lúc lại rất gần, nhưng phần lớn thời gian nó nằm bên kia Mặt Trời. Sao Thủy thì luôn quanh quẩn gần tâm, nên trung bình nó mới là hàng xóm sát vách.'},
+{q:'Ai có nhiều vệ tinh hơn?',u:'vệ tinh',a:{id:'saturn',v:140},b:{id:'jupiter',v:95},win:'a',viz:'bar',
+ why:'Hai anh này thay nhau dẫn đầu sau mỗi đợt quan sát mới. Hiện Sao Thổ đang giữ ngôi với hơn 140 vệ tinh đã xác nhận.'},
+{q:'Hành tinh nào lạnh hơn?',u:'°C',a:{id:'uranus',v:-224},b:{id:'neptune',v:-214},win:'a',viz:'none',
+ why:'Sao Hải Vương xa hơn tận 1,6 tỉ km, nhưng nó tự hâm nóng mình từ bên trong. Sao Thiên Vương gần như không, nên giữ kỷ lục lạnh nhất hệ.'},
+{q:'Ngọn núi cao nhất nằm ở đâu?',u:'km',a:{id:'mars',v:22},b:{id:'earth',v:8.85},win:'a',viz:'bar',
+ why:'Olympus Mons cao 22 km. Vỏ Sao Hỏa không trôi như vỏ Trái Đất, nên dung nham cứ chồng mãi lên đúng một chỗ suốt hàng tỉ năm.'},
+{q:'Cùng một cục bằng nhau, cái nào nhẹ hơn?',u:'g/cm³',a:{id:'saturn',v:0.69},b:{id:'jupiter',v:1.33},win:'a',viz:'bar',
+ why:'Sao Thổ nhẹ hơn cả nước. Kiếm được cái bồn tắm đủ to thì nó nổi lềnh bềnh.'},
+{q:'Một năm ở đâu dài hơn?',u:'năm Trái Đất',a:{id:'neptune',v:164.8},b:{id:'uranus',v:84},win:'a',viz:'bar',
+ why:'Càng xa Mặt Trời thì vòng chạy càng dài mà bước chân lại càng chậm. Sao Hải Vương mất gần 165 năm mới đi hết một vòng.'},
+{q:'Gió ở đâu mạnh hơn?',u:'km/h',a:{id:'neptune',v:2100},b:{id:'jupiter',v:600},win:'a',viz:'bar',
+ why:'Sao Hải Vương gần như không nhận được nắng mà gió lại nhanh nhất hệ. Lấy năng lượng từ đâu thì đến giờ vẫn chưa ai trả lời xong.'},
+{q:'Cái nào to hơn?',u:'km',a:{id:'mercury',v:4879},b:{id:'moon',v:3475},win:'a',viz:'size',
+ why:'Sao Thủy chỉ nhỉnh hơn Mặt Trăng một chút. Nó là hành tinh nhỏ nhất, thua cả Ganymede, một vệ tinh của Sao Mộc.'},
+{q:'Cái nào to hơn?',u:'km',a:{id:'earth',v:12742},b:{id:'venus',v:12104},win:'a',viz:'size',
+ why:'Hai hành tinh gần như sinh đôi về kích thước. Khác nhau ở chỗ một bên có đại dương, bên kia thì 465 °C.'},
+{q:'Ai chạy quanh Mặt Trời nhanh hơn?',u:'km/giây',a:{id:'mercury',v:47.4},b:{id:'mars',v:24.1},win:'a',viz:'bar',
+ why:'Càng ở gần, lực hút càng mạnh, nên hành tinh phải chạy càng nhanh mới khỏi bị kéo tuột vào trong.'},
+{q:'Tự quay một vòng, ai lâu hơn?',u:'ngày Trái Đất',a:{id:'venus',v:243},b:{id:'mercury',v:59},win:'a',viz:'bar',
+ why:'Sao Kim quay chậm đến mức một vòng tự quay mất 243 ngày, còn dài hơn cả một năm 225 ngày của chính nó.'}
+];
+
+var TFQ=[
+{s:'Có đúng một người được chôn trên Mặt Trăng.',r:true,w:'Tro của nhà địa chất Eugene Shoemaker, gửi lên cùng tàu Lunar Prospector năm 1998.'},
+{s:'Bụi trên Mặt Trăng có mùi thuốc súng.',r:true,w:'Bụi bám vào đồ, mang vào khoang là bốc mùi. Các phi hành gia Apollo tả giống hệt nhau: khét như vừa bắn xong.'},
+{s:'Sao Thổ nhẹ hơn nước, kiếm được cái bồn đủ to thì nó nổi.',r:true,w:'Khối lượng riêng của nó là 0,69 g/cm³, còn nước là 1.'},
+{s:'Trên Sao Kim, Mặt Trời mọc ở phía tây.',r:true,w:'Nó tự quay ngược chiều so với gần như tất cả hàng xóm trong hệ.'},
+{s:'Gần 11 triệu cái tên người Trái Đất đang nằm trên Sao Hỏa.',r:true,w:'NASA khắc tên người đăng ký lên ba con chip silicon rồi gắn lên xe Perseverance.'},
+{s:'Bên trong Sao Thiên Vương có thể đang mưa kim cương.',r:true,w:'Áp suất bẻ gãy phân tử metan và nén carbon lại. Thí nghiệm trong phòng lab đã tạo ra đúng hiện tượng đó.'},
+{s:'Sao Thiên Vương bốc mùi trứng thối.',r:true,w:'Năm 2018 kính Gemini xác nhận đỉnh mây của nó đầy hydro sulfua.'},
+{s:'Hoàng hôn trên Sao Hỏa có màu xanh lam.',r:true,w:'Bụi mịn ở đó tán xạ ánh sáng ngược với Trái Đất, nên ban ngày trời nâu cam còn lúc lặn thì ánh xanh.'},
+{s:'NASA từng cố ý lao một tàu vũ trụ vào Sao Mộc.',r:true,w:'Tàu Galileo, năm 2003. Hết nhiên liệu, họ sợ nó rơi xuống Europa và mang vi khuẩn Trái Đất theo.'},
+{s:'Trên Mặt Trăng có hai quả bóng golf.',r:true,w:'Alan Shepard lén mang gậy lên và vụt hai phát năm 1971.'},
+{s:'Có một vệ tinh trông y hệt Ngôi Sao Chết trong Star Wars.',r:true,w:'Mimas của Sao Thổ, với cái hố va chạm khổng lồ lệch hẳn về một bên.'},
+{s:'Một ngày trên Sao Kim còn dài hơn một năm của nó.',r:true,w:'Tự quay một vòng mất 243 ngày, còn đi hết quỹ đạo chỉ mất 225 ngày.'},
+{s:'Sao Kim có hai vệ tinh nhỏ tên là Venera và Magellan.',r:false,w:'Sao Kim không có vệ tinh nào cả. Venera và Magellan là tên hai con tàu mà loài người gửi tới đó.'},
+{s:'Sao Mộc từng là một ngôi sao và đã tắt từ lâu.',r:false,w:'Nó chưa từng cháy. Muốn trở thành ngôi sao nhỏ nhất, Sao Mộc phải nặng thêm khoảng 80 lần nữa.'},
+{s:'Mặt Trời là ngôi sao lớn nhất trong Ngân Hà.',r:false,w:'Nó thuộc loại cỡ trung bình. Có những ngôi sao đường kính gấp nó cả nghìn lần.'},
+{s:'Lá cờ cắm trên Mặt Trăng bay phấp phới nhờ gió nhẹ.',r:false,w:'Trên đó không có khí quyển nên không có gió. Lá cờ được khâu sẵn một thanh ngang để căng ra cho đẹp ảnh.'},
+{s:'Vành đai Sao Thổ làm bằng cát vàng thổi lên từ bề mặt hành tinh.',r:false,w:'Nó chủ yếu là băng nước, lẫn ít đá bụi. Có cục nhỏ như hạt cát, có cục to bằng cả ngôi nhà.'},
+{s:'Có một hành tinh mà con người đi bộ trên bề mặt được, không cần đồ bảo hộ.',r:false,w:'Không có. Trớ trêu là nơi dễ chịu nhất ngoài Trái Đất lại nằm lơ lửng giữa tầng mây Sao Kim, cao 50 km.'},
+{s:'Trái Đất là nơi duy nhất trong hệ có núi lửa đang hoạt động.',r:false,w:'Io, một vệ tinh của Sao Mộc, là nơi núi lửa dữ dội nhất hệ. Nó phun liên tục vì bị Sao Mộc bóp méo.'},
+{s:'Trên Sao Hỏa có một cái hồ lộ thiên, tàu thăm dò đã chụp được sóng vỗ bờ.',r:false,w:'Áp suất ở đó quá thấp, nước lỏng lộ ra là bốc hơi gần như tức thì. Chỉ còn băng và lòng sông đã cạn từ lâu.'}
+];
+
+/* ---------- state ---------- */
+var KEY='hmt-v4';
+var S={seen:[],bestA:0,bestT:0,age:22,wt:60};
+try{var raw=localStorage.getItem(KEY);if(raw){var o=JSON.parse(raw);for(var k in o)S[k]=o[k]}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function counter(){$('#counter').textContent=S.seen.length+' / '+B.length+' thiên thể đã ghé'}
+
+/* ---------- views ---------- */
+var view='map';
+function setView(v){view=v;
+  $$('nav button').forEach(function(b){b.setAttribute('aria-selected',b.dataset.view===v?'true':'false')});
+  ['map','ab','tf','you'].forEach(function(n){$('#view-'+n).hidden=(n!==v)});
+  if(v==='map'){fit();loop()}
+  if(v==='ab')drawAB();
+  if(v==='tf')drawTF();
+  if(v==='you')drawYou()}
+$$('nav button').forEach(function(b){b.addEventListener('click',function(){setView(b.dataset.view)})});
+
+/* ---------- sky ---------- */
+var cv=$('#sky'),g=cv.getContext('2d');
+var W=0,H=0,stars=[],hits=[],sel='earth',run=!reduce,t=0,last=0,raf=0;
+var ORB=[.155,.245,.335,.425,.575,.70,.825,.945];
+var PER=[.241,.615,1,1.881,11.86,29.46,84,164.8];
+var RAD=[3.1,5.4,5.8,4.2,13.5,11.6,8.2,8.0];
+var ANG=[.55,2.35,4.15,5.4,1.15,3.25,5.85,2.05];
+var SPD=PER.map(function(p){return .22/Math.pow(p,.62)});
+
+function seed(){
+  stars=[];
+  var tint=['#ffffff','#ffffff','#dfe7ff','#cfdcff','#fff0d8','#ffe2bd'];
+  for(var i=0;i<255;i++)stars.push({x:Math.random(),y:Math.random(),r:Math.pow(Math.random(),2.4)*1.5+.22,
+    a:.18+Math.random()*.55,c:tint[(Math.random()*tint.length)|0],p:Math.random()*6.28,s:.4+Math.random()*1.6});
+  for(var j=0;j<185;j++){var u=Math.random(),gz=(Math.random()+Math.random()+Math.random()-1.5)*.075;
+    stars.push({x:u,y:.22+u*.56+gz,r:Math.pow(Math.random(),3)*1.1+.18,
+      a:.12+Math.random()*.34,c:tint[(Math.random()*tint.length)|0],p:Math.random()*6.28,s:.4+Math.random()*1.6})}}
+function fit(){
+  var r=cv.getBoundingClientRect();if(!r.width)return;
+  var d=Math.min(window.devicePixelRatio||1,2);W=r.width;H=r.height;
+  cv.width=Math.round(W*d);cv.height=Math.round(H*d);g.setTransform(d,0,0,d,0,0);
+  if(!stars.length)seed();paint()}
+if(window.ResizeObserver)new ResizeObserver(function(){if(view==='map')fit()}).observe(cv);
+else window.addEventListener('resize',function(){if(view==='map')fit()});
+
+function ring(x,y,pr,back){
+  g.save();g.translate(x,y);g.rotate(-.34);
+  g.strokeStyle='rgba(214,192,135,.62)';g.lineWidth=Math.max(1.1,pr*.22);g.beginPath();
+  if(back)g.ellipse(0,0,pr*2.05,pr*.62,0,Math.PI,6.283);else g.ellipse(0,0,pr*2.05,pr*.62,0,0,Math.PI);
+  g.stroke();g.restore()}
+function paint(){
+  if(!W)return;
+  var cx=W/2,cy=H/2,half=Math.min(W,H)/2-4,s=half/300;
+  g.clearRect(0,0,W,H);
+  g.save();g.translate(W/2,H/2);g.rotate(.51);
+  var bg=g.createLinearGradient(0,-H*.42,0,H*.42);
+  bg.addColorStop(0,'rgba(120,140,200,0)');bg.addColorStop(.5,'rgba(126,146,205,.062)');bg.addColorStop(1,'rgba(120,140,200,0)');
+  g.fillStyle=bg;g.fillRect(-W,-H*.42,W*2,H*.84);g.restore();
+  for(var i=0;i<stars.length;i++){var sx=stars[i];
+    g.globalAlpha=reduce?sx.a:sx.a*(.72+.28*Math.sin(t*sx.s+sx.p));
+    g.fillStyle=sx.c;g.beginPath();g.arc(sx.x*W,sx.y*H,sx.r,0,6.283);g.fill()}
+  g.globalAlpha=1;hits=[];
+  for(var k=0;k<8;k++){
+    g.beginPath();g.arc(cx,cy,ORB[k]*half,0,6.283);
+    g.strokeStyle=P[k].id===sel?'rgba(185,205,240,.40)':'rgba(175,195,235,.16)';g.lineWidth=1;g.stroke()}
+  var pl=reduce?1:1+.02*Math.sin(t*1.1),sr=17*s;
+  var gl=g.createRadialGradient(cx,cy,sr*.6,cx,cy,86*s*pl);
+  gl.addColorStop(0,'rgba(255,196,110,.30)');gl.addColorStop(.38,'rgba(255,178,80,.075)');gl.addColorStop(1,'rgba(255,170,70,0)');
+  g.fillStyle=gl;g.beginPath();g.arc(cx,cy,86*s*pl,0,6.283);g.fill();
+  var sg=g.createRadialGradient(cx,cy,0,cx,cy,sr);
+  sg.addColorStop(0,'#fffaf0');sg.addColorStop(.45,'#ffd68a');sg.addColorStop(1,'#f4a53c');
+  g.fillStyle=sg;g.beginPath();g.arc(cx,cy,sr,0,6.283);g.fill();
+  hits.push({id:'sun',x:cx,y:cy,r:sr});
+  if(sel==='sun'){g.strokeStyle='rgba(255,194,87,.7)';g.lineWidth=1;g.beginPath();g.arc(cx,cy,sr+9,0,6.283);g.stroke()}
+  var lab=W>=520;g.textAlign='center';
+  for(var j=0;j<8;j++){
+    var b=P[j],ag=ANG[j],x=cx+Math.cos(ag)*ORB[j]*half,y=cy+Math.sin(ag)*ORB[j]*half;
+    var pr=Math.max(2.4,RAD[j]*s);
+    var dx=cx-x,dy=cy-y,dl=Math.hypot(dx,dy)||1;dx/=dl;dy/=dl;
+    if(b.id==='saturn')ring(x,y,pr,true);
+    var pg=g.createRadialGradient(x+dx*pr*.62,y+dy*pr*.62,pr*.06,x,y,pr*1.28);
+    pg.addColorStop(0,lite(b.c,.52));pg.addColorStop(.42,b.c);pg.addColorStop(.78,dk(b.c,.52));pg.addColorStop(1,dk(b.c,.88));
+    g.fillStyle=pg;g.beginPath();g.arc(x,y,pr,0,6.283);g.fill();
+    if((b.id==='jupiter'||b.id==='saturn')&&pr>7){
+      g.save();g.beginPath();g.arc(x,y,pr,0,6.283);g.clip();
+      for(var n=-2;n<=2;n++){g.globalAlpha=.09+.05*((n+2)%2);
+        g.fillStyle=n%2?lite(b.c,.3):dk(b.c,.35);
+        g.beginPath();g.ellipse(x,y+n*pr*.32,pr*1.1,pr*.12,-.32,0,6.283);g.fill()}
+      g.globalAlpha=1;g.restore()}
+    if(b.id==='saturn')ring(x,y,pr,false);
+    hits.push({id:b.id,x:x,y:y,r:pr});
+    if(b.id===sel){g.strokeStyle='rgba(233,235,243,.55)';g.lineWidth=1;g.beginPath();g.arc(x,y,pr+8,0,6.283);g.stroke()}
+    if(lab||b.id===sel){g.font=(b.id===sel?'500 ':'400 ')+'10.5px "IBM Plex Mono",monospace';
+      g.fillStyle=b.id===sel?'rgba(255,255,255,.98)':'rgba(255,255,255,.78)';
+      g.fillText(b.name,x,y+pr+(b.id==='saturn'?17:14))}}
+  if(sel==='sun'||lab){g.font=(sel==='sun'?'500 ':'400 ')+'10.5px "IBM Plex Mono",monospace';
+    g.fillStyle=sel==='sun'?'rgba(255,255,255,.98)':'rgba(255,255,255,.78)';
+    g.fillText('Mặt Trời',cx,cy+sr+15)}}
+function step(ts){
+  if(view!=='map'||document.hidden){raf=0;return}
+  var dt=last?Math.min((ts-last)/1000,.05):0;last=ts;t+=dt;
+  if(run)for(var i=0;i<8;i++)ANG[i]+=SPD[i]*dt;
+  paint();raf=requestAnimationFrame(step)}
+function loop(){if(raf)return;last=0;raf=requestAnimationFrame(step)}
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&view==='map')loop()});
+function near(e){var r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,best=null,bd=1e9;
+  hits.forEach(function(h){var d=Math.hypot(h.x-x,h.y-y),lim=Math.max(22,h.r+11);if(d<lim&&d<bd){bd=d;best=h}});return best}
+cv.addEventListener('pointerdown',function(e){var h=near(e);if(h)pickBody(h.id)});
+cv.addEventListener('pointermove',function(e){cv.style.cursor=near(e)?'pointer':'default'});
+$('#motion').addEventListener('click',function(){run=!run;this.textContent=run?'Dừng':'Chạy'});
+$('#motion').textContent=run?'Dừng':'Chạy';
+$('#bare').addEventListener('click',function(){
+  var on=$('#stage').classList.toggle('bare');
+  $('.scale').classList.toggle('bare',on);$('.gal').classList.toggle('bare',on);
+  this.textContent=on?'Hiện bảng':'Ẩn bảng';fit()});
+
+/* ---------- readout + gallery ---------- */
+function drawReadout(){
+  var b=get(sel);
+  $('#readout').style.setProperty('--c',b.c);
+  $('#readout').innerHTML=
+    '<div class="r-nav"><span class="m">'+esc(b.kind)+'</span>'+
+    '<span class="r-arrows"><button type="button" data-step="-1" aria-label="Thiên thể trước">‹</button>'+
+    '<button type="button" data-step="1" aria-label="Thiên thể sau">›</button></span></div>'+
+    '<h2 class="r-name">'+esc(b.name)+'</h2><p class="r-tag">'+esc(b.tag)+'</p>'+
+    '<dl class="grid">'+b.data.map(function(d){return '<div><dt>'+esc(d[0])+'</dt><dd>'+esc(d[1])+'</dd></div>'}).join('')+'</dl>';
+  $('#galHead').style.setProperty('--c',b.c);
+  $('#galHead').innerHTML='<i></i><h3>Bốn điều lạ về '+esc(b.name)+'</h3>';
+  $('#cards').innerHTML=b.notes.map(function(n){
+    return '<article class="fc" style="--c:'+b.c+'"><div class="ill">'+(ILL[n.i]||'')+'</div>'+
+      '<div class="tx"><h4>'+esc(n.h)+'</h4><p>'+n.t+'</p></div></article>'}).join('')}
+$('#readout').addEventListener('click',function(e){
+  var s=e.target.closest('[data-step]');if(!s)return;
+  var idx=0;for(var i=0;i<B.length;i++)if(B[i].id===sel)idx=i;
+  pickBody(B[(idx+ +s.dataset.step+B.length)%B.length].id)});
+function pickBody(id){sel=id;
+  if(S.seen.indexOf(id)<0){S.seen.push(id);save();counter()}
+  drawReadout();drawRuler();paint()}
+
+function drawRuler(){
+  $('#ruler').innerHTML=P.map(function(b){
+    return '<button type="button" data-r="'+b.id+'" aria-pressed="'+(b.id===sel)+'" title="'+esc(b.name)+' · '+num(b.dist)+' triệu km" style="--c:'+b.c+';left:'+(b.dist/4495*100).toFixed(2)+'%"><i></i></button>'}).join('')}
+$('#ruler').addEventListener('click',function(e){var r=e.target.closest('[data-r]');if(r)pickBody(r.dataset.r)});
+
+/* ---------- cái nào hơn ---------- */
+var AN=6,A=null;
+function startAB(){A={l:shuffle(ABQ.slice()).slice(0,AN),i:0,pts:0,pick:null};drawAB()}
+function vizOf(it){
+  var ta=thing(it.a.id),tb=thing(it.b.id);
+  if(it.viz==='none')return '<div class="viz"><div class="vrow">'+
+    '<div><span class="m">'+esc(ta.name)+'</span><b>'+auto(it.a.v)+' '+esc(it.u)+'</b></div>'+
+    '<div><span class="m">'+esc(tb.name)+'</span><b>'+auto(it.b.v)+' '+esc(it.u)+'</b></div></div></div>';
+  if(it.viz==='size'){
+    var mx=Math.max(it.a.v,it.b.v),cap=120;
+    return '<div class="viz"><div class="vsize">'+[[ta,it.a.v],[tb,it.b.v]].map(function(p){
+      var d=Math.max(14,Math.round(p[1]/mx*cap));
+      return '<figure style="--c:'+p[0].c+'"><div class="ball" style="width:'+d+'px;height:'+d+'px"></div>'+
+        '<figcaption>'+esc(p[0].name)+'<span class="v">'+num(p[1])+' km</span></figcaption></figure>'}).join('')+'</div></div>'}
+  var m2=Math.max(it.a.v,it.b.v);
+  return '<div class="viz">'+[[ta,it.a.v],[tb,it.b.v]].map(function(p){
+    return '<div class="vbar" style="--c:'+p[0].c+'"><span class="n">'+esc(p[0].name)+'</span>'+
+      '<span class="track"><i style="width:'+Math.max(5,p[1]/m2*100).toFixed(1)+'%"></i></span>'+
+      '<span class="v">'+auto(p[1])+'</span></div>'}).join('')+
+    '<div style="text-align:right"><span class="m">'+esc(it.u)+'</span></div></div>'}
+function drawAB(){
+  var box=$('#abBox');
+  if(!A){box.innerHTML='<div class="box"><span class="m">Trò chơi 01 · dễ nhất</span>'+
+    '<h2>Cái nào hơn?</h2><p class="lead">Hai thiên thể, một câu hỏi, chọn đại một cái. Không cần biết gì trước cũng chơi được, và mấy câu trả lời hay ngược với linh cảm nhất lại là mấy câu vui nhất.</p>'+
+    '<div class="row" style="margin-bottom:24px"><span class="m">Kỷ lục '+S.bestA+' / '+AN+'</span></div>'+
+    '<button class="go" type="button" data-a="start">Chơi thử</button></div>';return}
+  if(A.i>=AN){box.innerHTML='<div class="box"><span class="m">Kết quả</span><div class="big">'+A.pts+'<small>/ '+AN+'</small></div>'+
+    '<h2>'+(A.pts>=5?'Linh cảm của bạn chuẩn đấy.':A.pts>=3?'Hơn một nửa, không tệ chút nào.':'Vũ trụ thích trêu người, đúng không.')+'</h2>'+
+    '<p class="lead">Mấy câu bạn đoán trượt thường là mấy câu thú vị nhất. Ghé qua tab Bản đồ xem lý do đằng sau chúng.</p>'+
+    '<button class="go" type="button" data-a="start">Chơi lại</button></div>';return}
+  var it=A.l[A.i],pk=A.pick;
+  var ticks=A.l.map(function(_,i){return '<i class="'+(i<A.i?'done':i===A.i?'now':'')+'"></i>'}).join('');
+  var opt=function(key){
+    var o=it[key],tg=thing(o.id),cls='';
+    if(pk){cls=key===it.win?' hit':(key===pk?' miss':' dim')}
+    return '<button class="'+cls.trim()+'" type="button" style="--c:'+tg.c+'" data-k="'+key+'"'+(pk?' disabled':'')+'>'+
+      '<i></i><span>'+esc(tg.name)+'</span></button>'};
+  var after='';
+  if(pk){var ok=pk===it.win;
+    after=vizOf(it)+'<div class="verdict" style="margin-top:18px"><div class="vrow"><div><span class="m">'+
+      (ok?'Chuẩn':'Hụt rồi')+'</span><b class="'+(ok?'ok':'no')+'">'+esc(thing(it[it.win].id).name)+'</b></div></div>'+
+      '<p>'+esc(it.why)+'</p></div>'+
+      '<div class="after"><button class="go" type="button" data-a="next">'+(A.i===AN-1?'Kết quả':'Câu tiếp')+'</button></div>'}
+  box.innerHTML='<div class="box"><div class="row"><span class="m">Câu '+(A.i+1)+' / '+AN+'</span><span class="m">'+A.pts+' đúng</span></div>'+
+    '<div class="ticks">'+ticks+'</div><p class="ask">'+esc(it.q)+'</p>'+
+    '<div class="duo">'+opt('a')+opt('b')+'</div>'+after+'</div>'}
+$('#abBox').addEventListener('click',function(e){
+  var a=e.target.closest('[data-a]');
+  if(a){if(a.dataset.a==='start')startAB();
+    else if(a.dataset.a==='next'){A.i++;A.pick=null;
+      if(A.i>=AN&&A.pts>S.bestA){S.bestA=A.pts;save()}drawAB()}
+    return}
+  var k=e.target.closest('[data-k]');if(!k||!A||A.pick)return;
+  A.pick=k.dataset.k;if(A.pick===A.l[A.i].win)A.pts++;
+  drawAB();var nb=$('[data-a="next"]',$('#abBox'));if(nb)nb.focus()});
+
+/* ---------- thật hay xạo ---------- */
+var TN=8,T=null;
+function startTF(){
+  var real=shuffle(TFQ.filter(function(q){return q.r})).slice(0,4);
+  var fake=shuffle(TFQ.filter(function(q){return !q.r})).slice(0,4);
+  T={l:shuffle(real.concat(fake)),i:0,pts:0,pick:null};drawTF()}
+function drawTF(){
+  var box=$('#tfBox');
+  if(!T){box.innerHTML='<div class="box"><span class="m">Trò chơi 02 · dễ</span>'+
+    '<h2>Thật hay xạo?</h2><p class="lead">Tám câu nghe đều hoang đường như nhau. Một nửa là chuyện có thật, một nửa mình bịa ra. Đoán bừa cũng được 50%, nhưng mấy câu thật thường là mấy câu khó tin nhất.</p>'+
+    '<div class="row" style="margin-bottom:24px"><span class="m">Kỷ lục '+S.bestT+' / '+TN+'</span></div>'+
+    '<button class="go" type="button" data-a="start">Chơi thử</button></div>';return}
+  if(T.i>=TN){box.innerHTML='<div class="box"><span class="m">Kết quả</span><div class="big">'+T.pts+'<small>/ '+TN+'</small></div>'+
+    '<h2>'+(T.pts>=7?'Khó lừa được bạn.':T.pts>=5?'Trên mức đoán bừa, ổn rồi.':'Vũ trụ thật còn lạ hơn mấy thứ mình bịa.')+'</h2>'+
+    '<button class="go" type="button" data-a="start">Chơi lại</button></div>';return}
+  var it=T.l[T.i],pk=T.pick;
+  var ticks=T.l.map(function(_,i){return '<i class="'+(i<T.i?'done':i===T.i?'now':'')+'"></i>'}).join('');
+  var opt=function(v,lab,col){
+    var cls='';if(pk!==null){cls=(v===it.r?' hit':(v===pk?' miss':' dim'))}
+    return '<button class="'+cls.trim()+'" type="button" style="--c:'+col+'" data-v="'+v+'"'+(pk!==null?' disabled':'')+'>'+
+      '<i></i><span>'+lab+'</span></button>'};
+  var after='';
+  if(pk!==null){var ok=pk===it.r;
+    after='<div class="verdict" style="margin-top:22px"><div class="vrow"><div><span class="m">'+
+      (ok?'Đoán chuẩn':'Trượt rồi')+'</span><b class="'+(ok?'ok':'no')+'">'+(it.r?'Chuyện này có thật':'Cái này mình bịa')+'</b></div></div>'+
+      '<p>'+esc(it.w)+'</p></div>'+
+      '<div class="after"><button class="go" type="button" data-a="next">'+(T.i===TN-1?'Kết quả':'Câu tiếp')+'</button></div>'}
+  box.innerHTML='<div class="box"><div class="row"><span class="m">Câu '+(T.i+1)+' / '+TN+'</span><span class="m">'+T.pts+' đúng</span></div>'+
+    '<div class="ticks">'+ticks+'</div><p class="ask">'+esc(it.s)+'</p>'+
+    '<div class="duo">'+opt(true,'Thật','#8fd6b0')+opt(false,'Xạo','#e8909d')+'</div>'+after+'</div>'}
+$('#tfBox').addEventListener('click',function(e){
+  var a=e.target.closest('[data-a]');
+  if(a){if(a.dataset.a==='start')startTF();
+    else if(a.dataset.a==='next'){T.i++;T.pick=null;
+      if(T.i>=TN&&T.pts>S.bestT){S.bestT=T.pts;save()}drawTF()}
+    return}
+  var v=e.target.closest('[data-v]');if(!v||!T||T.pick!==null)return;
+  T.pick=v.dataset.v==='true';if(T.pick===T.l[T.i].r)T.pts++;
+  drawTF();var nb=$('[data-a="next"]',$('#tfBox'));if(nb)nb.focus()});
+
+/* ---------- bạn ở đó ---------- */
+var YOU=[
+{id:'mercury',p:0.241,g:0.38},
+{id:'venus',p:0.615,g:0.90},
+{id:'earth',p:1,g:1},
+{id:'moon',p:null,g:0.165},
+{id:'mars',p:1.881,g:0.38},
+{id:'jupiter',p:11.86,g:2.53},
+{id:'saturn',p:29.46,g:1.06},
+{id:'uranus',p:84.01,g:0.90},
+{id:'neptune',p:164.8,g:1.14}];
+var JUMP0=0.5;
+function kg(v){return num(v,v<10?1:0)+' kg'}
+function hgt(m){return m<1?num(m*100,0)+' cm':num(m,m<10?2:1)+' m'}
+function yrs(v){return num(v,v>=10?0:(v>=1?1:2))+' tuổi'}
+function jumpArt(m,c){
+  var bar=6+52*Math.min(m,3.1)/3.1,ap=66-bar,cy=2*ap-66;
+  return '<svg viewBox="0 0 120 74" fill="none" stroke-linecap="round" aria-hidden="true">'+
+    '<path d="M4 66 L116 66" stroke="rgba(158,178,218,.28)" stroke-width="1.5"/>'+
+    '<path d="M26 66 Q64 '+cy.toFixed(1)+' 102 66" stroke="'+c+'" stroke-width="1.6" stroke-dasharray="3 4" opacity=".9"/>'+
+    '<circle cx="14" cy="46" r="4.5" fill="'+c+'"/>'+
+    '<path d="M14 51.5 L14 58 M8.5 54 L19.5 54 M14 58 L10 66 M14 58 L18 66" stroke="'+c+'" stroke-width="2"/>'+
+    '<circle cx="102" cy="66" r="2.2" fill="'+c+'" opacity=".8"/></svg>'}
+function youRows(){
+  var age=S.age||22,w=S.wt||60;
+  return YOU.map(function(y){var t=thing(y.id);
+    return {name:t.name,c:t.c,age:y.p?age/y.p:null,moons:y.p?null:age*12.37,w:w*y.g,jump:JUMP0/y.g}})}
+function refreshYou(){
+  var rows=youRows();
+  var light=rows.slice().sort(function(a,b){return a.w-b.w})[0];
+  var heavy=rows.slice().sort(function(a,b){return b.w-a.w})[0];
+  var young=rows.filter(function(r){return r.age!==null}).sort(function(a,b){return a.age-b.age})[0];
+  $('#agev').textContent=(S.age||22);
+  $('#wtv').textContent=(S.wt||60)+' kg';
+  $('#hl').innerHTML=
+    '<div style="--c:'+light.c+'"><span class="m">Nhẹ nhất ở</span><b>'+esc(light.name)+'</b><em>Bạn còn '+kg(light.w)+', bật một cái là lên tới '+hgt(light.jump)+'.</em></div>'+
+    '<div style="--c:'+heavy.c+'"><span class="m">Nặng nhất ở</span><b>'+esc(heavy.name)+'</b><em>Bạn thành '+kg(heavy.w)+', nhấc chân lên thôi đã thấy nặng.</em></div>'+
+    '<div style="--c:'+young.c+'"><span class="m">Trẻ nhất ở</span><b>'+esc(young.name)+'</b><em>Ở đó bạn mới '+yrs(young.age)+', chưa kịp đón sinh nhật đầu tiên.</em></div>';
+  $('#youCards').innerHTML=rows.map(function(r){
+    return '<article class="yc" style="--c:'+r.c+'"><div class="hd"><i></i><span>'+esc(r.name)+'</span></div>'+
+      jumpArt(r.jump,r.c)+'<dl>'+
+      (r.age!==null?'<dt>Tuổi</dt><dd>'+yrs(r.age)+'</dd>':'<dt>Trăng tròn</dt><dd>'+num(r.moons,0)+' lần</dd>')+
+      '<dt>Cân nặng</dt><dd>'+kg(r.w)+'</dd>'+
+      '<dt>Nhảy cao</dt><dd>'+hgt(r.jump)+'</dd></dl></article>'}).join('')}
+var youBuilt=false;
+function drawYou(){
+  if(youBuilt){refreshYou();return}
+  var age=S.age||22,w=S.wt||60;
+  $('#youBox').innerHTML='<div class="box">'+
+    '<span class="m">Không phải trò đố · chỉ là bạn</span>'+
+    '<h2>Bạn sẽ ra sao nếu đứng ở đó?</h2>'+
+    '<p class="lead">Kéo hai thanh bên dưới rồi xem chính mình đổi khác thế nào khắp hệ. Tuổi tính theo số vòng mà nơi đó đã đi quanh Mặt Trời kể từ ngày bạn sinh ra. Độ nhảy tính từ một cú bật tại chỗ cao nửa mét trên Trái Đất.</p>'+
+    '<div class="tune">'+
+      '<label><span class="lv"><span class="m">Tuổi của bạn</span><b id="agev">'+age+'</b></span>'+
+      '<input type="range" id="ager" min="1" max="90" step="1" value="'+age+'" aria-label="Tuổi của bạn"></label>'+
+      '<label><span class="lv"><span class="m">Cân nặng trên Trái Đất</span><b id="wtv">'+w+' kg</b></span>'+
+      '<input type="range" id="wtr" min="20" max="150" step="1" value="'+w+'" aria-label="Cân nặng trên Trái Đất"></label>'+
+    '</div><div class="hl" id="hl"></div><div class="you" id="youCards"></div>'+
+    '<p class="lead" style="margin:30px 0 0;font-size:.87rem">Con số cân nặng là trọng lượng bạn cảm thấy dưới lực hấp dẫn ở đó. Lượng vật chất trong người bạn thì không đổi đi đâu cả. Với bốn hành tinh khí, đó là lực hấp dẫn ở lớp mây trên cùng, vì chúng không hề có mặt đất để đứng.</p></div>';
+  $('#ager').addEventListener('input',function(){S.age=+this.value;save();refreshYou()});
+  $('#wtr').addEventListener('input',function(){S.wt=+this.value;save();refreshYou()});
+  youBuilt=true;refreshYou()}
+
+/* ---------- boot ---------- */
+if(S.seen.indexOf(sel)<0){S.seen.push(sel);save()}
+counter();drawReadout();drawRuler();fit();loop();
+})();
+</script>
+</body>
+</html>
